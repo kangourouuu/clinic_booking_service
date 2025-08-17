@@ -1,0 +1,14 @@
+{
+    "drug_allergies": [
+        "Amoxicillin",
+        "Tetracycline",
+        "Cephalosporin"
+    ],
+    "disease_treatment_history": [
+        "Bệnh thận mãn tính (2021-hiện tại)",
+        "Cao huyết áp (2019-hiện tại)",
+        "Gout (2020-hiện tại)"
+    ],
+    "other_history": "Tiền sử phẫu thuật ruột thừa năm 2015. Có gia đình bị bệnh tim mạch.",
+    "patient_id": "REPLACE_WITH_ACTUAL_PATIENT_UUID"
+}

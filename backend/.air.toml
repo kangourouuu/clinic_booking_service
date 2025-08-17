@@ -1,0 +1,12 @@
+# optional file
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/app ./cmd/main.go"
+bin = "tmp/app"
+delay = 1000
+exclude_dir = ["tmp", "node_modules"]
+
+[log]
+time = true

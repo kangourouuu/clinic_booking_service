@@ -1,0 +1,18 @@
+{
+    "drug_allergies": [
+        "Penicillin",
+        "Aspirin",
+        "Sulfonamides",
+        "Morphine",
+        "Codeine"
+    ],
+    "disease_treatment_history": [
+        "Tăng huyết áp (2020-hiện tại)",
+        "Tiểu đường type 2 (2018-hiện tại)",
+        "Viêm gan B (đã khỏi 2019)",
+        "Bệnh tim mạch (2022-hiện tại)",
+        "Cholesterol cao (2021-hiện tại)"
+    ],
+    "other_history": "Có tiền sử gia đình bị tim mạch. Phẫu thuật bypass tim năm 2022. Đang theo dõi định kỳ tại khoa tim mạch.",
+    "patient_id": "REPLACE_WITH_ACTUAL_PATIENT_UUID"
+}
