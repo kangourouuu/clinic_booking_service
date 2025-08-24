@@ -14,6 +14,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -85,7 +86,7 @@ func (h *NurseHandler) GetNurses(ctx *gin.Context) {
 		return
 	}
 
-	fullResp := dto.PaginationResponse{
+	fullResp := dto.PaginationResponse[dtonurse.NurseResponse]{
 		Data:       n,
 		Pagination: &paginationReq,
 	}
@@ -179,7 +180,6 @@ func (h *NurseHandler) GetAllBookingQueues(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	logrus.Info("Upgrade HTTP request to WebSocket")
 
 	defer logrus.Info("Connection is closing ...")
 	defer conn.Close()
@@ -196,7 +196,6 @@ func (h *NurseHandler) GetAllBookingQueues(ctx *gin.Context) {
 		log.Println(err)
 		return
 	}
-	logrus.Info("Read message successfully")
 
 	var paginationReq pagination.Pagination
 	err = ctx.ShouldBindQuery(&paginationReq)
@@ -348,18 +347,32 @@ func (h *NurseHandler) GetAllBookingQueues(ctx *gin.Context) {
 }
 
 func (h *NurseHandler) MarkCompleteQueue(ctx *gin.Context) {
-	queueId := ctx.Query("queueId")
-	if queueId == "" {
+	queueIdStr := ctx.Query("queueId")
+	if queueIdStr == "" {
 		ctx.JSON(http.StatusBadRequest, errorsresponse.NewCustomErrResponse(http.StatusBadRequest, "invalid queue id"))
 		return
 	}
 
-	err := h.redis.HDel(ctx, "queue", queueId)
+	err := h.redis.HDel(ctx, "queue", queueIdStr)
 	if err != nil {
 		logrus.Error(err)
-		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occurs when mark complete this patient"))
+		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occur when mark complete this patient"))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, nil, "Completed"))
+	queueId, err := strconv.Atoi(queueIdStr)
+	if err != nil {
+		logrus.Errorf("Handler layer: %v", err)
+		ctx.JSON(http.StatusBadRequest, errorsresponse.NewCustomErrResponse(http.StatusBadRequest, "Invalid id"))
+		return
+	}
+
+	err = h.mqUsecase.UpdateBookingStatus(ctx, queueId)
+	if err != nil {
+		logrus.Errorf("Handler layer: %v", err)
+		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occur when updating complete status"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, queueId, "Completed"))
 }

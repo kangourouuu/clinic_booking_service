@@ -5,6 +5,7 @@ import (
 	"backend/internal/domain/dto"
 	dtopatient "backend/internal/domain/dto/dto_patient"
 	"backend/internal/domain/dto/dtoservice"
+	dtoqueue "backend/internal/domain/dto/queue"
 	patientusecase "backend/internal/usecase/patient-usecase"
 	paymentusecase "backend/internal/usecase/payment_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
@@ -76,11 +77,12 @@ func (h *PatientHandler) GetPatients(ctx *gin.Context) {
 		return
 	}
 
-	fullResp := dto.PaginationResponse{
+	fullResp := dto.PaginationResponse[dtopatient.PatientResponse]{
 		Data:       resp,
 		Pagination: &paginationReq,
 	}
 
+	logrus.Printf("Handler response: %+v", fullResp)
 	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &fullResp, "Data fetched"))
 }
 
@@ -93,7 +95,7 @@ func (h *PatientHandler) GetPatientById(ctx *gin.Context) {
 		logrus.Error(err)
 		return
 	}
-
+	logrus.Printf("Handler response: %+v", resp)
 	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &resp, "Data fetched"))
 }
 
@@ -101,11 +103,6 @@ func (h *PatientHandler) UpdatePatient(ctx *gin.Context) {
 	var req dtopatient.UpdatePatientRequest
 
 	param := ctx.Param("id")
-
-	// Debug: Log all form values
-	logrus.Infof("=== DEBUG: UpdatePatient request ===")
-	logrus.Infof("Patient ID: %s", param)
-	logrus.Infof("Content-Type: %s", ctx.GetHeader("Content-Type"))
 
 	// Parse multipart form
 	err := ctx.Request.ParseMultipartForm(32 << 20) // 32MB max
@@ -232,7 +229,6 @@ func (h *PatientHandler) GetProfile(ctx *gin.Context) {
 
 func (h *PatientHandler) PatientRegisterService(ctx *gin.Context) {
 	var appointment dtoservice.AppointmentRequest
-
 	if err := ctx.ShouldBindJSON(&appointment); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorsresponse.NewCustomErrResponse(http.StatusBadRequest, "appointment date is not valid"))
 		logrus.Error(err)
@@ -266,33 +262,18 @@ func (h *PatientHandler) PatientRegisterService(ctx *gin.Context) {
 		return
 	}
 
-	req := dtoservice.PatientRegisterService{
-		PatientId:          patient.PatientId,
-		PatientName:        patient.FullName,
-		PatientEmail:       patient.Email,
-		PatientPhoneNumber: patient.PhoneNumber,
-
-		ServiceId:       serviceId,
-		ServiceName:     service.ServiceName,
-		ServiceCode:     service.ServiceCode,
-		Cost:            service.Cost,
-		AppointmentDate: appointment.AppointmentDate,
-	}
-
-	s, err := h.paymentUsecase.CreateCheckoutSession(&req)
+	s, err := h.paymentUsecase.CreateCheckoutSession(patient, service, appointment)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occured in server"))
 		logrus.Error(err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"url":         s.URL,
-		"session_id":  s.ID,
-		"information": &req,
-	})
-
-	// ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &resp, "All service has fetched"))
+	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, gin.H{
+		"url":        s.URL,
+		"session_id": s.ID,
+		// "information": &req,
+	}, "Session created"))
 }
 
 func (h *PatientHandler) GetBookingQueuesByPatientId(ctx *gin.Context) {
@@ -320,7 +301,7 @@ func (h *PatientHandler) GetBookingQueuesByPatientId(ctx *gin.Context) {
 	logrus.Info(resp)
 	logrus.Info(&resp)
 	logrus.Info(patientId)
-	fullResp := &dto.PaginationResponse{
+	fullResp := &dto.PaginationResponse[dtoqueue.BookingQueueResponse]{
 		Data:       resp,
 		Pagination: &paginationReq,
 	}

@@ -1,0 +1,23 @@
+time="2025-08-22T03:51:35Z" level=info msg="Failed to parse string to time: parsing time \"2004-08-20\" as \"02/01/2006\": cannot parse \"04-08-20\" as \"/\""
+
+    patient_integration_test.go:259: 
+
+        	Error Trace:	/app/test/integration/patient_integration_test.go:259
+
+        	Error:      	Not equal: 
+
+        	            	expected: 400
+
+        	            	actual  : 201
+
+        	Test:       	TestCreatePatient/Invalid_Date_Format
+
+    patient_integration_test.go:184: 
+
+        	Error Trace:	/app/test/integration/patient_integration_test.go:184
+
+        	            				/app/test/integration/patient_integration_test.go:261
+
+        	Error:      	"New patient has created" does not contain "Failed to parse string to time: parsing time \"20-08-2004\" as \"02/01/2006\": cannot parse \"-08-2004\" as \"/\""
+
+        	Test:       	TestCreatePatient/Invalid_Date_Format

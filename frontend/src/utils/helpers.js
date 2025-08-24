@@ -15,6 +15,12 @@ export const formatCurrency = (amount, currency = 'VND') => {
 
 // Format date
 export const formatDate = (date, options = {}) => {
+    if (!date) return 'Chưa cập nhật';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) {
+        return 'Ngày không hợp lệ';
+    }
+
     const defaultOptions = {
         year: 'numeric',
         month: 'long',
@@ -22,7 +28,7 @@ export const formatDate = (date, options = {}) => {
         ...options
     }
 
-    return new Intl.DateTimeFormat('vi-VN', defaultOptions).format(new Date(date))
+    return new Intl.DateTimeFormat('vi-VN', defaultOptions).format(d)
 }
 
 // Format time

@@ -1,6 +1,7 @@
 package paymentusecase
 
 import (
+	dtopatient "backend/internal/domain/dto/dto_patient"
 	"backend/internal/domain/dto/dtoservice"
 	dtoqueue "backend/internal/domain/dto/queue"
 	"backend/pkg/common/utils"
@@ -17,7 +18,7 @@ import (
 )
 
 type PaymentMethods interface {
-	CreateCheckoutSession(resp *dtoservice.PatientRegisterService) (*stripe.CheckoutSession, error)
+	CreateCheckoutSession(patient *dtopatient.PatientResponse, service *dtoservice.ServiceResponse, appointment dtoservice.AppointmentRequest) (*stripe.CheckoutSession, error)
 	WebhookCheckAndSolving(event stripe.Event) (*dtoqueue.BookingQueuePublish, error)
 }
 
@@ -27,7 +28,20 @@ func NewPaymentMethods() PaymentMethods {
 	return &paymentMethods{}
 }
 
-func (p *paymentMethods) CreateCheckoutSession(req *dtoservice.PatientRegisterService) (*stripe.CheckoutSession, error) {
+func (p *paymentMethods) CreateCheckoutSession(patient *dtopatient.PatientResponse, service *dtoservice.ServiceResponse, appointment dtoservice.AppointmentRequest) (*stripe.CheckoutSession, error) {
+
+	req := dtoservice.PatientRegisterService{
+		PatientId:          patient.PatientId,
+		PatientName:        patient.FullName,
+		PatientEmail:       patient.Email,
+		PatientPhoneNumber: patient.PhoneNumber,
+
+		ServiceId:       service.ServiceId,
+		ServiceName:     service.ServiceName,
+		ServiceCode:     service.ServiceCode,
+		Cost:            service.Cost,
+		AppointmentDate: appointment.AppointmentDate,
+	}
 
 	stripe.Key = os.Getenv("STRIPE_API")
 	if stripe.Key == "" {
@@ -36,10 +50,8 @@ func (p *paymentMethods) CreateCheckoutSession(req *dtoservice.PatientRegisterSe
 	}
 
 	vndAmount := req.Cost
-
-	// Ensure minimum amount of $0.50 (50 cents) for Stripe
-	if vndAmount < 100 {
-		vndAmount = 100
+	if vndAmount < 999 {
+		vndAmount = 1000
 	}
 
 	params := &stripe.CheckoutSessionParams{
@@ -84,7 +96,6 @@ func (p *paymentMethods) CreateCheckoutSession(req *dtoservice.PatientRegisterSe
 	}
 
 	logrus.Infof("Checkout session created successfully!")
-
 	return s, nil
 }
 
@@ -124,8 +135,11 @@ func (p *paymentMethods) WebhookCheckAndSolving(event stripe.Event) (*dtoqueue.B
 		ServiceName:        metadata["service_name"],
 		ServiceCode:        metadata["service_code"],
 		Cost:               serviceCost,
+		PaymentStatus:      "paid",
+		BookingStatus:      "waiting",
 		CreatedAt:          time.Now(),
 		AppointmentDate:    appointmentDate,
 	}
+	
 	return bookingQueuePublish, nil
 }

@@ -1,7 +1,7 @@
 package dtoqueue
 
 import (
-	"backend/internal/domain/queue"
+	"backend/internal/domain/patient"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,6 +18,9 @@ type BookingQueuePublish struct {
 	ServiceCode string  `json:"service_code,omitempty"`
 	Cost        float64 `json:"cost,omitempty"`
 
+	PaymentStatus string `json:"payment_status"`
+	BookingStatus string `json:"booking_status"`
+
 	AppointmentDate time.Time `json:"appointment"`
 	CreatedAt       time.Time `json:"created_at"`
 }
@@ -33,14 +36,17 @@ type BookingQueueResponse struct {
 	ServiceCode string  `json:"service_code,omitempty"`
 	Cost        float64 `json:"cost,omitempty"`
 
+	PaymentStatus string `json:"payment_status"`
+	BookingStatus string `json:"booking_status"`
+
 	AppointmentDate time.Time `json:"appointment"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 
-func ConvertToResponse(bq *queue.BookingQueue) *BookingQueueResponse {
-    if bq == nil {
-        return nil
-    }
+func ConvertToResponse(bq *patient.BookingQueue) *BookingQueueResponse {
+	if bq == nil {
+		return nil
+	}
 	resp := &BookingQueueResponse{
 		QueueId:            bq.QueueId,
 		PatientId:          bq.PatientId,
@@ -50,13 +56,15 @@ func ConvertToResponse(bq *queue.BookingQueue) *BookingQueueResponse {
 		ServiceName:        bq.ServiceName,
 		ServiceCode:        bq.ServiceCode,
 		Cost:               bq.ServiceCost,
+		PaymentStatus:      string(bq.PaymentStatus),
+		BookingStatus:      string(bq.BookingStatus),
 		AppointmentDate:    bq.AppointmentDate,
 		CreatedAt:          bq.CreatedAt,
 	}
 	return resp
 }
 
-func ConvertToListResponse(bq []*queue.BookingQueue) []*BookingQueueResponse {
+func ConvertToListResponse(bq []*patient.BookingQueue) []*BookingQueueResponse {
 	resp := make([]*BookingQueueResponse, len(bq))
 	for i, bqValue := range bq {
 		resp[i] = ConvertToResponse(bqValue)

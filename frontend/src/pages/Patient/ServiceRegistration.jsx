@@ -145,9 +145,9 @@ const ServiceRegistration = () => {
             // Call API to register service and get Stripe checkout URL
             const response = await patientService.registerService(selectedService, appointmentDate) // Pass appointmentDate
 
-            if (response.url) {
+            if (response.data && response.data.url) {
                 // Redirect to Stripe checkout page
-                window.location.href = response.url
+                window.location.href = response.data.url
             } else {
                 // Fallback success message if no URL provided
                 setSuccess(true)

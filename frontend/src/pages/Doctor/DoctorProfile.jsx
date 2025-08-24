@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { User, Mail, Phone, Calendar, MapPin, Edit3, Save, X, Stethoscope, Award, Clock } from 'lucide-react'
+import { User, Mail, Phone, Calendar, MapPin, Edit3, Save, X, Stethoscope, Award, Clock, Briefcase, GraduationCap } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card'
 import Button from '../../components/ui/Button'
 import Layout from '../../components/layout/Layout'
@@ -8,63 +8,52 @@ import { useAuth } from '../../context/AuthContext'
 import { doctorService } from '../../services/apiServices'
 import toast from 'react-hot-toast'
 
+const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 'text', placeholder, children }) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
+            {icon}
+            <span className="ml-2">{label}</span>
+        </label>
+        {isEditing ? (
+            children || (
+                <input
+                    type={type}
+                    name={name}
+                    value={value || ''}
+                    onChange={onChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition"
+                    placeholder={placeholder}
+                />
+            )
+        ) : (
+            <p className="text-gray-900 font-medium text-base bg-gray-50 px-4 py-2 rounded-lg min-h-[42px] flex items-center">{value || 'Chưa cập nhật'}</p>
+        )}
+    </div>
+)
+
 const DoctorProfile = () => {
     const { user, updateUser } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
     const [loading, setLoading] = useState(true)
     const [profileData, setProfileData] = useState(null)
-    const [formData, setFormData] = useState({
-        name: '',
-        email: '',
-        phone: '',
-        date_of_birth: '',
-        address: '',
-        department: '',
-        license_number: '',
-        specialization: '',
-        experience_years: '',
-        education: '',
-        degrees: '',
-        consultation_fee: '',
-        working_hours: ''
-    })
+    const [activeTab, setActiveTab] = useState('personal')
+    const [formData, setFormData] = useState({})
 
-    // Fetch profile data from API
     useEffect(() => {
         const fetchProfile = async () => {
             try {
                 setLoading(true)
                 const response = await doctorService.getProfile()
-                console.log('Doctor API raw response:', response)
-
-                // Try different response structures
-                let data = response
-                if (response && response.data) {
-                    data = response.data
-                    console.log('Using response.data:', data)
-                } else if (response && response.user) {
-                    data = response.user
-                    console.log('Using response.user:', data)
-                }
-
-                console.log('Final doctor profile data:', data)
-                console.log('Doctor name from API:', data?.name)
-                console.log('Backend fields check - full_name:', data?.full_name, 'phone_number:', data?.phone_number, 'dob:', data?.dob)
-                console.log('Doctor address from API:', data?.address)
-                console.log('All available fields:', Object.keys(data || {}))
-
+                const data = response.data || response.user || response
                 setProfileData(data)
-
-                // Update form data with API response - mapping backend fields to frontend
                 setFormData({
-                    name: data.full_name || data.name || '',
+                    full_name: data.full_name || data.name || '',
                     email: data.email || '',
-                    phone: data.phone_number || data.phone || '',
-                    date_of_birth: data.dob || (data.date_of_birth ? data.date_of_birth.split('T')[0] : ''),
+                    phone_number: data.phone_number || data.phone || '',
+                    dob: data.dob ? convertDateToInputFormat(data.dob) : '',
                     address: data.address || '',
-                    department: data.department || '',
-                    license_number: data.license_number || '',
                     specialization: data.specialization || '',
+                    license_number: data.license_number || '',
                     experience_years: data.experience_years || '',
                     education: data.education || '',
                     degrees: data.degrees || '',
@@ -72,479 +61,121 @@ const DoctorProfile = () => {
                     working_hours: data.working_hours || ''
                 })
             } catch (error) {
-                console.error('Error fetching doctor profile:', error)
                 toast.error('Không thể tải thông tin cá nhân')
-                // Fallback to user data from context if API fails
-                if (user) {
-                    console.log('Using fallback user data:', user)
-                    setProfileData(user)
-                    setFormData({
-                        name: user.name || '',
-                        email: user.email || '',
-                        phone: user.phone || '',
-                        date_of_birth: user.date_of_birth ? user.date_of_birth.split('T')[0] : '',
-                        address: user.address || '',
-                        department: user.department || '',
-                        license_number: user.license_number || '',
-                        specialization: user.specialization || '',
-                        experience_years: user.experience_years || '',
-                        education: user.education || '',
-                        degrees: user.degrees || '',
-                        consultation_fee: user.consultation_fee || '',
-                        working_hours: user.working_hours || ''
-                    })
-                }
             } finally {
                 setLoading(false)
             }
         }
-
         fetchProfile()
-    }, [user])
+    }, [])
+
+    const convertDateToBackendFormat = (dateString) => {
+        if (!dateString || !dateString.includes('-')) return dateString
+        const [year, month, day] = dateString.split('-')
+        return `${day}/${month}/${year}`
+    }
+
+    const convertDateToInputFormat = (dateString) => {
+        if (!dateString || !dateString.includes('/')) return dateString
+        const [day, month, year] = dateString.split('/')
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+    }
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }))
+        setFormData(prev => ({ ...prev, [name]: value }))
     }
 
     const handleSave = async () => {
         try {
             setLoading(true)
-
-            // Prepare data for API call
-            const updateData = {
-                full_name: formData.name,
-                email: formData.email,
-                phone_number: formData.phone,
-                date_of_birth: formData.date_of_birth,
-                address: formData.address,
-                specialization: formData.specialization,
-                license_number: formData.license_number,
-                experience_years: formData.experience_years
-            }
-
-            console.log('Updating doctor profile with data:', updateData)
-            console.log('Doctor ID from profile:', profileData.doctor_id || profileData.id)
-
-            // Call API to update profile
             const doctorId = profileData.doctor_id || profileData.id
-            if (!doctorId) {
-                throw new Error('Doctor ID not found in profile data')
-            }
+            if (!doctorId) throw new Error('Doctor ID not found')
+
+            const updateData = { ...formData, dob: convertDateToBackendFormat(formData.dob) }
 
             await doctorService.updateProfile(doctorId, updateData)
-
-            // Refresh profile data after update
-            const updatedProfileResponse = await doctorService.getProfile()
-            const updatedProfileData = updatedProfileResponse.data || updatedProfileResponse
-            setProfileData(updatedProfileData)
-
-            // Update auth context with new data
-            updateUser({
-                ...user,
-                name: updatedProfileData.full_name || updatedProfileData.name,
-                email: updatedProfileData.email,
-                phone: updatedProfileData.phone_number || updatedProfileData.phone
-            })
-
+            const response = await doctorService.getProfile()
+            const updatedData = response.data || response
+            setProfileData(updatedData)
+            updateUser(updatedData)
             setIsEditing(false)
             toast.success('Cập nhật thông tin thành công!')
         } catch (error) {
-            console.error('Error updating profile:', error)
-            toast.error('Có lỗi xảy ra khi cập nhật thông tin')
+            toast.error('Có lỗi xảy ra khi cập nhật')
         } finally {
             setLoading(false)
         }
     }
 
     const handleCancel = () => {
-        if (profileData) {
-            setFormData({
-                name: profileData.name || '',
-                email: profileData.email || '',
-                phone: profileData.phone || '',
-                date_of_birth: profileData.date_of_birth ? profileData.date_of_birth.split('T')[0] : '',
-                address: profileData.address || '',
-                department: profileData.department || '',
-                license_number: profileData.license_number || '',
-                specialization: profileData.specialization || '',
-                experience_years: profileData.experience_years || '',
-                education: profileData.education || '',
-                degrees: profileData.degrees || '',
-                consultation_fee: profileData.consultation_fee || '',
-                working_hours: profileData.working_hours || ''
-            })
-        }
+        setFormData(profileData)
         setIsEditing(false)
     }
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'Chưa cập nhật'
-        const date = new Date(dateString)
-        return date.toLocaleDateString('vi-VN')
-    }
-
-    const formatCurrency = (amount) => {
-        if (!amount) return 'Chưa cập nhật'
-        return new Intl.NumberFormat('vi-VN').format(amount) + ' VNĐ'
-    }
-
-    if (!profileData || loading) {
-        return (
-            <Layout>
-                <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 py-8">
-                    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center py-12">
-                            <p className="text-gray-600">Đang tải thông tin...</p>
-                        </div>
-                    </div>
-                </div>
-            </Layout>
-        )
+    if (loading) {
+        return <Layout><div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div></Layout>
     }
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 py-8">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header */}
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-8"
-                    >
-                        <div className="mx-auto w-20 h-20 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mb-4">
-                            <Stethoscope className="h-10 w-10 text-white" />
+            <div className="min-h-screen bg-gray-50 py-10">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row items-center gap-8 mb-8">
+                        <div className="relative">
+                            <img src={profileData?.photo || '/path/to/default-avatar.png'} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"/>
                         </div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Thông tin bác sĩ</h1>
-                        <p className="text-gray-600">Quản lý thông tin cá nhân và chuyên môn</p>
+                        <div className="text-center md:text-left">
+                            <h1 className="text-4xl font-bold text-gray-900">{profileData?.full_name}</h1>
+                            <p className="text-lg text-blue-600 font-semibold mt-1">{profileData?.specialization || 'Chuyên khoa'}</p>
+                        </div>
+                        <div className="md:ml-auto flex gap-2 mt-4 md:mt-0">
+                            {!isEditing ? (
+                                <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white"><Edit3 className="h-4 w-4 mr-2" />Chỉnh sửa</Button>
+                            ) : (
+                                <>
+                                    <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white"><Save className="h-4 w-4 mr-2" />Lưu</Button>
+                                    <Button onClick={handleCancel} variant="outline"><X className="h-4 w-4 mr-2" />Hủy</Button>
+                                </>
+                            )}
+                        </div>
                     </motion.div>
 
-                    {/* Profile Card */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 }}
-                    >
-                        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-                            <CardHeader className="pb-6">
-                                <div className="flex justify-between items-center">
-                                    <CardTitle className="text-xl text-gray-900">
-                                        Hồ sơ bác sĩ
-                                    </CardTitle>
-                                    {!isEditing ? (
-                                        <Button
-                                            onClick={() => setIsEditing(true)}
-                                            className="bg-purple-600 hover:bg-purple-700 text-white"
-                                        >
-                                            <Edit3 className="h-4 w-4 mr-2" />
-                                            Chỉnh sửa
-                                        </Button>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <Button
-                                                onClick={handleSave}
-                                                className="bg-green-600 hover:bg-green-700 text-white"
-                                            >
-                                                <Save className="h-4 w-4 mr-2" />
-                                                Lưu
-                                            </Button>
-                                            <Button
-                                                onClick={handleCancel}
-                                                variant="outline"
-                                            >
-                                                <X className="h-4 w-4 mr-2" />
-                                                Hủy
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardHeader>
-
-                            <CardContent className="space-y-6">
-                                {/* Basic Information */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            <User className="h-4 w-4 inline mr-2" />
-                                            Họ và tên
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                placeholder="Nhập họ và tên"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profileData.full_name || profileData.name || 'Chưa cập nhật'}</p>
-                                        )}
+                    <Card className="shadow-xl border-0 bg-white">
+                        <CardHeader>
+                            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                                <button onClick={() => setActiveTab('personal')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'personal' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin cá nhân</button>
+                                <button onClick={() => setActiveTab('professional')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'professional' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin chuyên môn</button>
+                            </nav>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            {activeTab === 'personal' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <ProfileField icon={<User />} label="Họ và tên" value={formData.full_name} isEditing={isEditing} name="full_name" onChange={handleInputChange} />
+                                    <ProfileField icon={<Mail />} label="Email" value={formData.email} isEditing={isEditing} name="email" onChange={handleInputChange} type="email" />
+                                    <ProfileField icon={<Phone />} label="Số điện thoại" value={formData.phone_number} isEditing={isEditing} name="phone_number" onChange={handleInputChange} type="tel" />
+                                    <ProfileField icon={<Calendar />} label="Ngày sinh" value={isEditing ? formData.dob : formatDate(profileData?.dob)} isEditing={isEditing} name="dob" onChange={handleInputChange} type="date" />
+                                    <div className="md:col-span-2">
+                                        <ProfileField icon={<MapPin />} label="Địa chỉ" value={formData.address} isEditing={isEditing} name="address" onChange={handleInputChange} />
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            <Mail className="h-4 w-4 inline mr-2" />
-                                            Email
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                placeholder="Nhập email"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profileData.email || 'Chưa cập nhật'}</p>
-                                        )}
+                                </motion.div>
+                            )}
+                            {activeTab === 'professional' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <ProfileField icon={<Stethoscope />} label="Chuyên môn" value={formData.specialization} isEditing={isEditing} name="specialization" onChange={handleInputChange} />
+                                    <ProfileField icon={<Award />} label="Số chứng chỉ" value={formData.license_number} isEditing={isEditing} name="license_number" onChange={handleInputChange} />
+                                    <ProfileField icon={<Briefcase />} label="Năm kinh nghiệm" value={formData.experience_years} isEditing={isEditing} name="experience_years" onChange={handleInputChange} type="number" />
+                                    <ProfileField icon={<Clock />} label="Giờ làm việc" value={formData.working_hours} isEditing={isEditing} name="working_hours" onChange={handleInputChange} />
+                                    <div className="md:col-span-2">
+                                        <ProfileField icon={<GraduationCap />} label="Học vấn" value={formData.education} isEditing={isEditing} name="education" onChange={handleInputChange} children={isEditing && <textarea name="education" value={formData.education} onChange={handleInputChange} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />} />
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            <Phone className="h-4 w-4 inline mr-2" />
-                                            Số điện thoại
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                placeholder="Nhập số điện thoại"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profileData.phone_number || profileData.phone || 'Chưa cập nhật'}</p>
-                                        )}
+                                    <div className="md:col-span-2">
+                                        <ProfileField icon={<Award />} label="Bằng cấp" value={formData.degrees} isEditing={isEditing} name="degrees" onChange={handleInputChange} children={isEditing && <textarea name="degrees" value={formData.degrees} onChange={handleInputChange} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />} />
                                     </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            <Calendar className="h-4 w-4 inline mr-2" />
-                                            Ngày sinh
-                                        </label>
-                                        {isEditing ? (
-                                            <input
-                                                type="date"
-                                                name="date_of_birth"
-                                                value={formData.date_of_birth}
-                                                onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                            />
-                                        ) : (
-                                            <p className="text-gray-900 font-medium">{profileData.dob || formatDate(profileData.date_of_birth) || 'Chưa cập nhật'}</p>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Address */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        <MapPin className="h-4 w-4 inline mr-2" />
-                                        Địa chỉ
-                                    </label>
-                                    {isEditing ? (
-                                        <textarea
-                                            name="address"
-                                            value={formData.address}
-                                            onChange={handleInputChange}
-                                            rows={2}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                            placeholder="Nhập địa chỉ"
-                                        />
-                                    ) : (
-                                        <p className="text-gray-900 font-medium">{profileData.address || 'Chưa cập nhật'}</p>
-                                    )}
-                                </div>
-
-                                {/* Professional Information */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin chuyên môn</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Khoa/Chuyên khoa
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="department"
-                                                    value={formData.department}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập khoa/chuyên khoa"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.department || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <Award className="h-4 w-4 inline mr-2" />
-                                                Số chứng chỉ hành nghề
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="license_number"
-                                                    value={formData.license_number}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập số chứng chỉ hành nghề"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.license_number || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Chuyên môn
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="specialization"
-                                                    value={formData.specialization}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập chuyên môn"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.specialization || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Số năm kinh nghiệm
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    name="experience_years"
-                                                    value={formData.experience_years}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập số năm kinh nghiệm"
-                                                    min="0"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">
-                                                    {profileData.experience_years ? `${profileData.experience_years} năm` : 'Chưa cập nhật'}
-                                                </p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Phí khám
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="number"
-                                                    name="consultation_fee"
-                                                    value={formData.consultation_fee}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập phí khám (VND)"
-                                                    min="0"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{formatCurrency(profileData.consultation_fee)}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                <Clock className="h-4 w-4 inline mr-2" />
-                                                Giờ làm việc
-                                            </label>
-                                            {isEditing ? (
-                                                <input
-                                                    type="text"
-                                                    name="working_hours"
-                                                    value={formData.working_hours}
-                                                    onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="VD: 8:00 - 17:00 (Thứ 2-6)"
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.working_hours || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Education & Degrees */}
-                                <div className="border-t pt-6">
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Học vấn & Bằng cấp</h3>
-                                    <div className="grid grid-cols-1 gap-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Trình độ học vấn
-                                            </label>
-                                            {isEditing ? (
-                                                <textarea
-                                                    name="education"
-                                                    value={formData.education}
-                                                    onChange={handleInputChange}
-                                                    rows={3}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập thông tin về trình độ học vấn..."
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{user.education || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Bằng cấp chuyên môn
-                                            </label>
-                                            {isEditing ? (
-                                                <textarea
-                                                    name="degrees"
-                                                    value={formData.degrees}
-                                                    onChange={handleInputChange}
-                                                    rows={3}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập thông tin về bằng cấp, chuyên môn..."
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.degrees || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Bằng cấp chuyên môn
-                                            </label>
-                                            {isEditing ? (
-                                                <textarea
-                                                    name="degrees"
-                                                    value={formData.degrees}
-                                                    onChange={handleInputChange}
-                                                    rows={3}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                                                    placeholder="Nhập thông tin về bằng cấp, chứng chỉ chuyên môn..."
-                                                />
-                                            ) : (
-                                                <p className="text-gray-900 font-medium">{profileData.degrees || 'Chưa cập nhật'}</p>
-                                            )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
+                                </motion.div>
+                            )}
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         </Layout>

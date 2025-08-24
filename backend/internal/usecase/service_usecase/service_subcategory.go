@@ -2,7 +2,7 @@ package serviceusecase
 
 import (
 	"backend/internal/domain/dto/dtoservice"
-	persistence "backend/internal/infrastructure/persistence/service-repository"
+	persistence "backend/internal/infrastructure/persistence/service_repository"
 	"context"
 )
 

@@ -70,7 +70,7 @@ func (h *DoctorHandler) GetDoctors(ctx *gin.Context) {
 		logrus.Error(err)
 		return
 	}
-	fullResp := dto.PaginationResponse{
+	fullResp := dto.PaginationResponse[dtodoctor.DoctorResponse]{
 		Data:       d,
 		Pagination: pagination,
 	}

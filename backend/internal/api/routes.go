@@ -8,10 +8,12 @@ import (
 	paymenthandler "backend/internal/api/payment_handler"
 	servicehandler "backend/internal/api/service_handler"
 	"backend/internal/infrastructure/db"
-	doctorrepository "backend/internal/infrastructure/persistence/doctor-repository"
-	nurseRepository "backend/internal/infrastructure/persistence/nurse-repository"
-	patientrepository "backend/internal/infrastructure/persistence/patient-repository"
-	persistence "backend/internal/infrastructure/persistence/service-repository"
+	cloudinaryutils "backend/pkg/common/utils/cloudinary_utils"
+
+	patientrepository "backend/internal/infrastructure/persistence/patient_repository"
+	persistence "backend/internal/infrastructure/persistence/service_repository"
+	doctorrepository "backend/internal/infrastructure/persistence/staff_repository/doctor_repository"
+	nurserepository "backend/internal/infrastructure/persistence/staff_repository/nurse_repository"
 	"backend/internal/infrastructure/redis"
 	doctorusecase "backend/internal/usecase/doctor-usecase"
 	messagequeue "backend/internal/usecase/message_queue"
@@ -27,11 +29,12 @@ import (
 // localhost:9000/api
 func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeue.RabbitMQUsecase, rc *redis.RedisClient) {
 
-	// nurse & message_queue
-	nurseRepo := nurseRepository.NewNurseRepo(db.DatabaseClient.GetDB())
-	nurseService := nurseUsecase.NewNurseService(nurseRepo)
 	messageQueueRepo := persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB())
 	messageQueueUsecase := serviceusecase.NewBookingQueueUsecase(messageQueueRepo)
+
+	// nurse & message_queue
+	nurseRepo := nurserepository.NewNurseRepo(db.DatabaseClient.GetDB())
+	nurseService := nurseUsecase.NewNurseService(nurseRepo)
 	nurseHandler := nurseHandler.NewNurseHandler(nurseService, messageQueueUsecase, *rc)
 
 	// doctor
@@ -58,9 +61,10 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 	paymentUsecase := paymentusecase.NewPaymentMethods()
 	paymentHandler := paymenthandler.NewPaymentHandler(rbmqUsecase, paymentUsecase)
 
+	avatarUploader := cloudinaryutils.NewAvatarUploader()
 	// patient
 	patientRepo := patientrepository.NewPatientRepo(db.DatabaseClient.GetDB())
-	patientService := patientUsecase.NewPatientService(patientRepo, *rc)
+	patientService := patientUsecase.NewPatientService(patientRepo, *rc, avatarUploader)
 	patientHandler := patientHandler.NewPatientHandler(patientService, serviceUsecase, messageQueueUsecase, paymentUsecase)
 
 	r.POST("/login/patient", patientHandler.LoginPatient)
@@ -78,6 +82,7 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 		adminGroup.PUT("/patient/:id", patientHandler.UpdatePatient)
 		adminGroup.DELETE("/patient/:id", patientHandler.DeletePatient)
 
+		adminGroup.GET("/patients", patientHandler.GetPatients)
 		adminGroup.GET("/nurses", nurseHandler.GetNurses)
 		adminGroup.GET("/nurse/:id", nurseHandler.GetNurseById)
 		adminGroup.DELETE("/nurse/:id", nurseHandler.DeleteNurse)

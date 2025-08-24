@@ -2,8 +2,8 @@ package messagequeue
 
 import (
 	dtoqueue "backend/internal/domain/dto/queue"
-	"backend/internal/domain/queue"
-	persistence "backend/internal/infrastructure/persistence/service-repository"
+	"backend/internal/domain/patient"
+	persistence "backend/internal/infrastructure/persistence/service_repository"
 	"backend/internal/infrastructure/rabbitmq"
 	"backend/internal/infrastructure/redis"
 	"backend/pkg/constants"
@@ -72,7 +72,6 @@ func (rbmq *rabbitMQUsecase) SetupInfrastructure(ctx context.Context) error {
 		logrus.Errorf("Failed to setup RabbitMQ infrastructure: %v", err)
 		return fmt.Errorf("failed to setup RabbitMQ infrastructure: %w", err)
 	}
-	logrus.Info("RabbitMQ infrastructure setup completed")
 	return nil
 }
 
@@ -83,15 +82,12 @@ func (rbmq *rabbitMQUsecase) PublishBooking(ctx context.Context, data *dtoqueue.
 	}
 	defer rbmq.uc.CloseChannel(ch)
 
-	logrus.Infof("Publishing booking for patient: %s, service: %s", data.PatientName, data.ServiceName)
-
 	err = rbmq.uc.PublishWithContext(ctx, ch, data, rabbitmq.QueueName)
 	if err != nil {
 		logrus.Errorf("Failed to publish booking: %v", err)
 		return fmt.Errorf("failed to publish booking: %w", err)
 	}
 
-	logrus.Info("Booking published successfully")
 	return nil
 }
 
@@ -108,7 +104,6 @@ func (rbmq *rabbitMQUsecase) StartBookingConsumer(ctx context.Context) error {
 		return fmt.Errorf("failed to start booking consumer: %w", err)
 	}
 
-	logrus.Info("Booking consumer started successfully")
 	return nil
 }
 
@@ -127,7 +122,6 @@ func (rbmq *rabbitMQUsecase) processBookingMessage(messageBody []byte) error {
 		logrus.Errorf("Failed to process booking business logic: %v", err)
 		return fmt.Errorf("failed to process booking business logic: %w", err)
 	}
-	fmt.Println(&bookingData)
 
 	logrus.Infof("Booking processed successfully for patient: %s", bookingData.PatientName)
 	return nil
@@ -137,7 +131,7 @@ func (rbmq *rabbitMQUsecase) processBookingMessage(messageBody []byte) error {
 func (rbmq *rabbitMQUsecase) processBookingBusinessLogic(data *dtoqueue.BookingQueuePublish) error {
 	ctx := context.Background()
 
-	bq := &queue.BookingQueue{
+	bq := &patient.BookingQueue{
 		PatientId:          data.PatientId,
 		PatientName:        data.PatientName,
 		PatientEmail:       data.PatientEmail,
@@ -146,6 +140,8 @@ func (rbmq *rabbitMQUsecase) processBookingBusinessLogic(data *dtoqueue.BookingQ
 		ServiceCode:        data.ServiceCode,
 		ServiceName:        data.ServiceName,
 		ServiceCost:        data.Cost,
+		PaymentStatus:      patient.PaymentStatus(data.PaymentStatus),
+		BookingStatus:      patient.BookingStatus(data.BookingStatus),
 		AppointmentDate:    data.AppointmentDate,
 		CreatedAt:          data.CreatedAt,
 	}
@@ -162,13 +158,11 @@ func (rbmq *rabbitMQUsecase) processBookingBusinessLogic(data *dtoqueue.BookingQ
 		return err
 	}
 
-	res, err := rbmq.redis.HSet(ctx, "queue", bq.QueueId, bqMarshaled)
+	_, err = rbmq.redis.HSet(ctx, "queue", bq.QueueId, bqMarshaled)
 	if err != nil {
 		logrus.Error("failed to set data on cache has")
 		return err
 	}
-
-	logrus.Info(res)
 
 	err = rbmq.redis.Publish(ctx, constants.CHANNEL_REDIS, "updated")
 	if err != nil {

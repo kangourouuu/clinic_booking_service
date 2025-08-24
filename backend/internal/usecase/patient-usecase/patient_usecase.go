@@ -3,7 +3,7 @@ package patientusecase
 import (
 	"backend/internal/domain/dto"
 	dtopatient "backend/internal/domain/dto/dto_patient"
-	patientrepository "backend/internal/infrastructure/persistence/patient-repository"
+	patientrepository "backend/internal/infrastructure/persistence/patient_repository"
 	"backend/internal/infrastructure/redis"
 	"backend/pkg/common/pagination"
 	"backend/pkg/common/utils"
@@ -30,14 +30,16 @@ type PatientUsecase interface {
 }
 
 type patientUsecase struct {
-	repo  patientrepository.PatientRepository
-	redis redis.RedisClient
+	repo           patientrepository.PatientRepository
+	avatarUploader cloudinaryutils.AvatarUploader
+	redis          redis.RedisClient
 }
 
-func NewPatientService(repo patientrepository.PatientRepository, redisConn redis.RedisClient) PatientUsecase {
+func NewPatientService(repo patientrepository.PatientRepository, redisConn redis.RedisClient, avatarUploader cloudinaryutils.AvatarUploader) PatientUsecase {
 	return &patientUsecase{
-		repo:  repo,
-		redis: redisConn,
+		repo:           repo,
+		redis:          redisConn,
+		avatarUploader: avatarUploader,
 	}
 }
 
@@ -67,7 +69,7 @@ func (s *patientUsecase) CreatePatient(ctx context.Context, d *dtopatient.Create
 
 	var avatarUrl string
 	if file != nil {
-		avatarUrl, err = cloudinaryutils.HandleCreateAvatar(file, d.PatientId)
+		avatarUrl, err = s.avatarUploader.UploadAvatar(file, d.PatientId)
 		if err != nil {
 			return err
 		}
@@ -141,8 +143,9 @@ func (s *patientUsecase) GetPatientById(ctx context.Context, patientId string) (
 		return nil, errors.New("invalid id")
 	}
 
+	patientID := uuid.MustParse(patientId)
 	// Get patient from repository
-	p, err := s.repo.GetPatientById(ctx, patientId)
+	p, err := s.repo.GetPatientById(ctx, patientID)
 	if err != nil {
 		logrus.Errorf("Failed to get patient by ID %s: %v", patientId, err)
 		return nil, err
@@ -177,8 +180,9 @@ func (s *patientUsecase) UpdatePatient(ctx context.Context, patientId string, ud
 		return err
 	}
 
+	patientID := uuid.MustParse(patientId)
 	// get current patient for updating
-	patient, err := s.repo.GetPatientById(ctx, patientId)
+	patient, err := s.repo.GetPatientById(ctx, patientID)
 	if err != nil {
 		return err
 	}
@@ -203,7 +207,7 @@ func (s *patientUsecase) UpdatePatient(ctx context.Context, patientId string, ud
 
 	var avatarUrl string
 	if file != nil {
-		avatarUrl, err = cloudinaryutils.HandleCreateAvatar(file, ud.PatientId)
+		avatarUrl, err = s.avatarUploader.UploadAvatar(file, ud.PatientId)
 		if err != nil {
 			return err
 		}
@@ -229,12 +233,13 @@ func (s *patientUsecase) UpdatePatient(ctx context.Context, patientId string, ud
 	p, _ := s.repo.BuildPatientModelForUpdate(ud, t, hashedPassword, nextOfKinInfo, drugAllergies, diseaseTreatmentHistory, patient)
 
 	// main logic
-	return s.repo.UpdatePatient(ctx, patientId, p)
+	return s.repo.UpdatePatient(ctx, patientID, p)
 }
 func (s *patientUsecase) DeletePatientById(ctx context.Context, patientId string) error {
 	// validate input
 	if ok := validator.IsValidId(patientId); !ok {
 		return errors.New("patientId must not be empty")
 	}
-	return s.repo.DeletePatientById(ctx, patientId)
+	patientID := uuid.MustParse(patientId)
+	return s.repo.DeletePatientById(ctx, patientID)
 }

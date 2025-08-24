@@ -3,7 +3,7 @@ package doctorusecase
 import (
 	"backend/internal/domain/dto"
 	"backend/internal/domain/dto/dtodoctor"
-	doctorrepository "backend/internal/infrastructure/persistence/doctor-repository"
+	doctorrepository "backend/internal/infrastructure/persistence/staff_repository/doctor_repository"
 	"backend/pkg/common/pagination"
 	"backend/pkg/common/utils"
 	"backend/pkg/common/validator"

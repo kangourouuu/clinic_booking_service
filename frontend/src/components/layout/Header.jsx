@@ -44,10 +44,10 @@ const Header = () => {
             case 'patient':
                 return [
                     { name: 'Dashboard', href: '/patient/dashboard' },
-                    { name: 'Dịch vụ', href: '/patient/services' },
+                    
                     { name: 'Đăng ký dịch vụ', href: '/patient/service-registration' },
-                    { name: 'Lịch hẹn', href: '/patient/bookings' },
-                    { name: 'Hồ sơ y tế', href: '/patient/medical-history' },
+                    
+                    
                 ]
             case 'nurse':
                 return [
@@ -151,7 +151,7 @@ const Header = () => {
                                             <User className="h-4 w-4 text-primary-600" />
                                         </div>
                                         <div className="hidden md:block text-left">
-                                            <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                                            <p className="text-sm font-medium text-gray-900">{user?.full_name || user?.name}</p>
                                             <p className="text-xs text-gray-600 capitalize">{role}</p>
                                         </div>
                                     </button>

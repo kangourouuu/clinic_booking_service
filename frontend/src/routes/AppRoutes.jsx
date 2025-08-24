@@ -40,6 +40,10 @@ import DoctorProfile from '../pages/Doctor/DoctorProfile'
 import DoctorSchedule from '../pages/Doctor/DoctorSchedule'
 import PatientManagement from '../pages/Doctor/PatientManagement'
 
+// Admin Pages
+import AdminLoginPage from '../pages/Auth/AdminLoginPage'
+import AdminDashboardPage from '../pages/Admin/AdminDashboardPage'
+
 // Error Pages
 import NotFound from '../pages/Error/NotFound'
 import Unauthorized from '../pages/Error/Unauthorized'
@@ -84,6 +88,16 @@ const AppRoutes = () => {
                         <Navigate to="/doctor/dashboard" replace />
                     ) : (
                         <DoctorLoginPage />
+                    )
+                }
+            />
+            <Route
+                path="/auth/admin"
+                element={
+                    user ? (
+                        <Navigate to="/admin/dashboard" replace />
+                    ) : (
+                        <AdminLoginPage />
                     )
                 }
             />
@@ -137,6 +151,16 @@ const AppRoutes = () => {
                         <Route path="profile" element={<DoctorProfile />} />
                         <Route path="schedule" element={<DoctorSchedule />} />
                         <Route path="patients" element={<PatientManagement />} />
+                        <Route path="" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                </ProtectedRoute>
+            } />
+
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                    <Routes>
+                        <Route path="dashboard" element={<AdminDashboardPage />} />
                         <Route path="" element={<Navigate to="dashboard" replace />} />
                     </Routes>
                 </ProtectedRoute>

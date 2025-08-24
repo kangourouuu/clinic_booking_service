@@ -1,0 +1,8 @@
+Uncaught RangeError: date value is not finite in DateTimeFormat.format()
+    formatDate helpers.js:25
+    NurseProfile NurseProfile.jsx:155
+    React 11
+    workLoop scheduler.development.js:266
+    flushWork scheduler.development.js:239
+    performWorkUntilDeadline scheduler.development.js:533
+helpers.js:25:61

@@ -96,7 +96,7 @@ const DoctorLoginPage = () => {
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <form onSubmit={handleSubmit} className="space-y-4">
-                                    <div>
+                                    <div className="relative">
                                         <Input
                                             type="tel"
                                             name="phone_number"

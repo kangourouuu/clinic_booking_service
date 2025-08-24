@@ -4,7 +4,7 @@ import (
 	"backend/cmd/server"
 	"backend/internal/api"
 	"backend/internal/infrastructure/db"
-	persistence "backend/internal/infrastructure/persistence/service-repository"
+	persistence "backend/internal/infrastructure/persistence/service_repository"
 	"backend/internal/infrastructure/rabbitmq"
 	"backend/internal/infrastructure/redis"
 	messagequeue "backend/internal/usecase/message_queue"
@@ -75,10 +75,6 @@ func main() {
 			logrus.Error("Failed to start consumer:", err)
 			cancel() // Cancel context on error
 		}
-	}()
-
-	go func() {
-
 	}()
 
 	engine := server.NewEngine()

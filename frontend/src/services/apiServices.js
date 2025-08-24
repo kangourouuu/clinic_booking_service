@@ -168,142 +168,141 @@ export const nurseService = {
         const response = await api.get(`/nurse/services/${serviceId}`)
         return response.data
     },
+}
 
-    // Create nurse (admin)
-    createNurse: async (nurseData) => {
-        const response = await api.post('/admin/create-nurse', nurseData)
-        return response.data
-    },
+export const adminService = {
+// Patient Management
+getPatients: async (page = 1, limit = 10) => {
+    const response = await api.get(`/admin/patients?page=${page}&limit=${limit}`)
+    return response.data
+},
 
-    // Get all nurses (admin)
-    getAllNurses: async (page = 1, limit = 10) => {
-        const response = await api.get(`/admin/nurses?page=${page}&limit=${limit}`)
-        return response.data
-    },
+createPatient: async (patientData) => {
+    const response = await api.post('/admin/create-patient', patientData)
+    return response.data
+},
 
-    // Get nurse by ID (admin)
-    getNurseById: async (nurseId) => {
-        const response = await api.get(`/admin/nurse/${nurseId}`)
-        return response.data
-    },
+updatePatient: async (patientId, patientData) => {
+    const response = await api.put(`/admin/patient/${patientId}`, patientData)
+    return response.data
+},
 
-    // Delete nurse (admin)
-    deleteNurse: async (nurseId) => {
-        const response = await api.delete(`/admin/nurse/${nurseId}`)
-        return response.data
-    },
+deletePatient: async (patientId) => {
+    const response = await api.delete(`/admin/patient/${patientId}`)
+    return response.data
+},
+
+// Nurse Management
+createNurse: async (nurseData) => {
+    const response = await api.post('/admin/create-nurse', nurseData)
+    return response.data
+},
+
+getAllNurses: async (page = 1, limit = 10) => {
+    const response = await api.get(`/admin/nurses?page=${page}&limit=${limit}`)
+    return response.data
+},
+
+getNurseById: async (nurseId) => {
+    const response = await api.get(`/admin/nurse/${nurseId}`)
+    return response.data
+},
+
+deleteNurse: async (nurseId) => {
+    const response = await api.delete(`/admin/nurse/${nurseId}`)
+    return response.data
+},
+
+// Doctor Management
+createDoctor: async (doctorData) => {
+    const response = await api.post('/admin/create-doctor', doctorData)
+    return response.data
+},
+
+getAllDoctors: async (page = 1, limit = 10) => {
+    const response = await api.get(`/admin/doctors?page=${page}&limit=${limit}`)
+    return response.data
+},
+
+getDoctorById: async (doctorId) => {
+    const response = await api.get(`/admin/doctor/${doctorId}`)
+    return response.data
+},
+
+deleteDoctor: async (doctorId) => {
+    const response = await api.delete(`/admin/doctor/${doctorId}`)
+    return response.data
+},
+
+// Service Management
+createService: async (serviceData) => {
+    const response = await api.post('/admin/create-service', serviceData)
+    return response.data
+},
+
+// Categories
+getAllCategories: async () => {
+    const response = await api.get('/patient/service/categories')
+    return response.data
+},
+
+// Get service categories
+getCategories: async () => {
+    const response = await api.get('/services/categories')
+    return response.data
+},
+
+// Subcategories
+getAllSubcategories: async (categoryId) => {
+    const response = await api.get(`/patient/service/subcategories?service_category_id=${categoryId}`)
+    return response.data
+},
+
+// Get subcategories by category
+getSubcategories: async (categoryId) => {
+    const response = await api.get(`/services/categories/${categoryId}/subcategories`)
+    return response.data
+},
+
+// Services by subcategory
+getServicesBySubcategory: async (subcategoryId) => {
+    const response = await api.get(`/patient/services?service_subcategory_id=${subcategoryId}`)
+    return response.data
+},
+
+// Get services by subcategory
+getServices: async (subcategoryId) => {
+    const response = await api.get(`/services/subcategories/${subcategoryId}/services`)
+    return response.data
+},
+
+// Get service details
+getServiceDetails: async (serviceId) => {
+    const response = await api.get(`/services/${serviceId}`)
+    return response.data
+},
+
+// Book a service
+bookService: async (bookingData) => {
+    const response = await api.post('/services/book', bookingData)
+    return response.data
+},
 }
 
 // Doctor Services
 export const doctorService = {
-    // Profile management
     getProfile: async () => {
         const response = await api.get('/doctor/profile')
         return response.data
     },
-
     updateProfile: async (doctorId, profileData) => {
         const response = await api.put(`/doctor/${doctorId}`, profileData)
         return response.data
     },
-
-    // Patient management
-    getPatients: async (page = 1, limit = 10) => {
-        const response = await api.get(`/doctor/patients?page=${page}&limit=${limit}`)
-        return response.data
-    },
-
     getPatientById: async (patientId) => {
         const response = await api.get(`/doctor/patient/${patientId}`)
         return response.data
-    },
-
-    // Additional doctor functionalities
-    getSchedule: async (date) => {
-        const response = await api.get(`/doctor/schedule?date=${date}`)
-        return response.data
-    },
-
-    // Create doctor (admin)
-    createDoctor: async (doctorData) => {
-        const response = await api.post('/admin/create-doctor', doctorData)
-        return response.data
-    },
-
-    // Get all doctors (admin)
-    getAllDoctors: async (page = 1, limit = 10) => {
-        const response = await api.get(`/admin/doctors?page=${page}&limit=${limit}`)
-        return response.data
-    },
-
-    // Get doctor by ID (admin)
-    getDoctorById: async (doctorId) => {
-        const response = await api.get(`/admin/doctor/${doctorId}`)
-        return response.data
-    },
-
-    // Delete doctor (admin)
-    deleteDoctor: async (doctorId) => {
-        const response = await api.delete(`/admin/doctor/${doctorId}`)
-        return response.data
-    },
-}
-
-// Service Management (Admin)
-export const serviceManagementService = {
-    // Services
-    createService: async (serviceData) => {
-        const response = await api.post('/admin/create-service', serviceData)
-        return response.data
-    },
-
-    // Categories
-    getAllCategories: async () => {
-        const response = await api.get('/patient/service/categories')
-        return response.data
-    },
-
-    // Get service categories
-    getCategories: async () => {
-        const response = await api.get('/services/categories')
-        return response.data
-    },
-
-    // Subcategories
-    getAllSubcategories: async (categoryId) => {
-        const response = await api.get(`/patient/service/subcategories?service_category_id=${categoryId}`)
-        return response.data
-    },
-
-    // Get subcategories by category
-    getSubcategories: async (categoryId) => {
-        const response = await api.get(`/services/categories/${categoryId}/subcategories`)
-        return response.data
-    },
-
-    // Services by subcategory
-    getServicesBySubcategory: async (subcategoryId) => {
-        const response = await api.get(`/patient/services?service_subcategory_id=${subcategoryId}`)
-        return response.data
-    },
-
-    // Get services by subcategory
-    getServices: async (subcategoryId) => {
-        const response = await api.get(`/services/subcategories/${subcategoryId}/services`)
-        return response.data
-    },
-
-    // Get service details
-    getServiceDetails: async (serviceId) => {
-        const response = await api.get(`/services/${serviceId}`)
-        return response.data
-    },
-
-    // Book a service
-    bookService: async (bookingData) => {
-        const response = await api.post('/services/book', bookingData)
-        return response.data
-    },
+    }
 }
 
 // Payment Services

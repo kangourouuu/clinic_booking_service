@@ -3,11 +3,11 @@ package nurse_usecase
 import (
 	"backend/internal/domain/dto"
 	dtonurse "backend/internal/domain/dto/dto_nurse"
-	nurserepo "backend/internal/infrastructure/persistence/nurse-repository"
+	nurserepository "backend/internal/infrastructure/persistence/staff_repository/nurse_repository"
 	"backend/pkg/common/pagination"
 	"backend/pkg/common/utils"
 	"backend/pkg/common/validator"
-	nurse_validator "backend/pkg/common/validator/nurse"
+	nursevalidator "backend/pkg/common/validator/nurse"
 	"context"
 	"errors"
 
@@ -25,10 +25,10 @@ type NurseUsecase interface {
 }
 
 type nurseUsecase struct {
-	repo nurserepo.NurseRepository
+	repo nurserepository.NurseRepository
 }
 
-func NewNurseService(repo nurserepo.NurseRepository) NurseUsecase {
+func NewNurseService(repo nurserepository.NurseRepository) NurseUsecase {
 	return &nurseUsecase{repo: repo}
 }
 
@@ -39,7 +39,7 @@ func (s *nurseUsecase) CreateNurse(ctx context.Context, d *dtonurse.CreateNurseR
 		return err
 	}
 
-	if err := nurse_validator.ValidateNurseFieldsForCreate(d); err != nil {
+	if err := nursevalidator.ValidateNurseFieldsForCreate(d); err != nil {
 		return err
 	}
 
@@ -116,7 +116,7 @@ func (s *nurseUsecase) UpdateNurseById(ctx context.Context, nurseId string, ud *
 		return errors.New("invalid nurse ID")
 	}
 
-	if err := nurse_validator.ValidateNurseFieldsForUpdate(ud); err != nil {
+	if err := nursevalidator.ValidateNurseFieldsForUpdate(ud); err != nil {
 		return err
 	}
 

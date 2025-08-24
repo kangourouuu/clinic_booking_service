@@ -29,7 +29,7 @@ const BookingHistory = () => {
                 const response = await patientService.getHistoryBooking(currentPage, pageSize);
                 
                 // Correctly parse the nested response from the Go backend
-                const responseData = response.data || {}; // This is the {Data, Pagination} object
+                const responseData = response.data || {};
                 const data = responseData.Data || [];
                 const paginationInfo = responseData.Pagination || {};
                 const total = paginationInfo.total || 0;

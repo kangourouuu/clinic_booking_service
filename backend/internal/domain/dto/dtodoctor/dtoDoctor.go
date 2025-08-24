@@ -1,43 +1,44 @@
 package dtodoctor
 
 import (
-	"backend/internal/domain/doctor"
+	"backend/internal/domain/staff/doctor"
+	staff "backend/internal/domain/staff/faculty"
 	"time"
 )
 
 type CreateDoctorRequest struct {
-	FullName    string    `json:"full_name" bun:"full_name"`
-	Gender      string    `json:"gender" bun:"gender"`
-	DoB         string    `json:"dob" bun:"dob"`
-	PhoneNumber string    `json:"phone_number" bun:"phone_number,unique"`
-	Password    string    `json:"password" bun:"password"`
-	Faculty     string    `json:"faculty" bun:"faculty"`
-	Position    string    `json:"position"`
-	Email       string    `json:"email" bun:"email,unique"`
-	CreatedAt   time.Time `json:"created_at"`
+	FullName    string        `json:"full_name"`
+	Gender      string        `json:"gender"`
+	DoB         string        `json:"dob"`
+	PhoneNumber string        `json:"phone_number"`
+	Password    string        `json:"password"`
+	Faculty     staff.Faculty `json:"faculty"`
+	Position    string        `json:"position"`
+	Email       string        `json:"email"`
+	CreatedAt   time.Time     `json:"created_at"`
 }
 
 type UpdateDoctorRequest struct {
-	FullName    string    `json:"full_name" bun:"full_name"`
-	Gender      string    `json:"gender" bun:"gender"`
-	DoB         string    `json:"dob" bun:"dob"`
-	PhoneNumber string    `json:"phone_number" bun:"phone_number,unique"`
-	Password    string    `json:"password" bun:"password"`
-	Faculty     string    `json:"faculty" bun:"faculty"`
-	Position    string    `json:"position"`
-	Email       string    `json:"email" bun:"email,unique"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	FullName    string        `json:"full_name"`
+	Gender      string        `json:"gender"`
+	DoB         string        `json:"dob"`
+	PhoneNumber string        `json:"phone_number"`
+	Password    string        `json:"password"`
+	Faculty     staff.Faculty `json:"faculty"`
+	Position    string        `json:"position"`
+	Email       string        `json:"email"`
+	UpdatedAt   time.Time     `json:"updated_at"`
 }
 
 type DoctorResponse struct {
-	FullName    string `json:"full_name" bun:"full_name"`
-	Gender      string `json:"gender" bun:"gender"`
-	DoB         string `json:"dob" bun:"dob"`
-	PhoneNumber string `json:"phone_number" bun:"phone_number,unique"`
-	Passsword   string `json:"-"`
-	Faculty     string `json:"faculty" bun:"faculty"`
-	Position    string `json:"position"`
-	Email       string `json:"email" bun:"email,unique"`
+	FullName    string        `json:"full_name"`
+	Gender      string        `json:"gender"`
+	DoB         string        `json:"dob"`
+	PhoneNumber string        `json:"phone_number"`
+	Passsword   string        `json:"-"`
+	Faculty     staff.Faculty `json:"faculty"`
+	Position    string        `json:"position"`
+	Email       string        `json:"email"`
 }
 
 func ConvertDoctorToDoctorResponse(d *doctor.Doctor) *DoctorResponse {

@@ -1,7 +1,8 @@
 package dtonurse
 
 import (
-	"backend/internal/domain/nurse"
+	staff "backend/internal/domain/staff/faculty"
+	"backend/internal/domain/staff/nurse"
 	"time"
 )
 
@@ -11,7 +12,7 @@ type CreateNurseRequest struct {
 	Gender      string    `json:"gender"`
 	PhoneNumber string    `json:"phone_number"`
 	Password    string    `json:"password"`
-	Faculty     string    `json:"faculty"`
+	Faculty     staff.Faculty `json:"faculty"`
 	Position    string    `json:"position"`
 	Email       string    `json:"email"`
 	CreatedAt   time.Time `json:"-"`
@@ -23,7 +24,7 @@ type UpdateNurseRequest struct {
 	Gender      string    `json:"gender"`
 	PhoneNumber string    `json:"phone_number"`
 	Password    string    `json:"password"`
-	Faculty     string    `json:"faculty"`
+	Faculty     staff.Faculty `json:"faculty"`
 	Position    string    `json:"position"`
 	Email       string    `json:"email"`
 	UpdatedAt   time.Time `json:"-"`
@@ -35,7 +36,7 @@ type NurseResponse struct {
 	Gender      string `json:"gender"`
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"-"`
-	Faculty     string `json:"faculty"`
+	Faculty     staff.Faculty `json:"faculty"`
 	Position    string `json:"position"`
 	Email       string `json:"email"`
 }

@@ -13,6 +13,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+type AvatarUploader interface {
+	UploadAvatar(file *multipart.FileHeader, patientId uuid.UUID) (string, error)
+}
+
+type CloudinaryUploader struct{}
+
+func NewAvatarUploader() AvatarUploader {
+	return &CloudinaryUploader{}
+}
+
 func Credentials() (*cloudinary.Cloudinary, context.Context) {
 	// add your cloudinary credentials
 	cld, _ := cloudinary.New()
@@ -83,7 +93,7 @@ func TransformImage(cld *cloudinary.Cloudinary, ctx context.Context) {
 	if err != nil {
 		logrus.Error(err)
 	} else {
-		logrus.Infof("Transform the image --> Transfrmation URL: ", new_url, "\n")
+		logrus.Infof("Transform the image --> Transfrmation URL: %v \n", new_url)
 	}
 }
 
@@ -128,3 +138,8 @@ func HandleCreateAvatar(file *multipart.FileHeader, patientId uuid.UUID) (string
 
 	return uploadedAvatarUrl, nil
 }
+
+func (cld *CloudinaryUploader) UploadAvatar(file *multipart.FileHeader, patientId uuid.UUID) (string, error) {
+	return HandleCreateAvatar(file, patientId)
+}
+

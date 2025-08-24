@@ -33,7 +33,7 @@ type Patient struct {
 	CreatedAt         time.Time       `json:"created_at"`
 	UpdatedAt         time.Time       `json:"updated_at"`
 
-	// Relationship with MedicalHistory
 	MedicalHistory     *MedicalHistory     `json:"medical_history,omitempty" bun:"rel:has-one,join:patient_id=patient_id"`
 	GeneralExamination *GeneralExamination `json:"general_examination" bun:"rel:has-one,join:patient_id=patient_id"`
+	BookingQueue       *BookingQueue       `json:"booking_queue" bun:"rel:has-one,join:patient_id=patient_id"`
 }

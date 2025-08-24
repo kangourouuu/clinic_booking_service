@@ -32,7 +32,7 @@ func InitConfig() error {
 	viper.SetConfigFile(AppConfig.Dir)
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Errorf("Not found config file: %s", ok)
+			fmt.Errorf("Not found config file: %v", ok)
 		}
 		fmt.Errorf("Failed to read config file: %s", err)
 	}

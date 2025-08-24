@@ -8,7 +8,7 @@ const Sidebar = () => {
         <div className="w-64 bg-white dark:bg-gray-800 shadow-md fixed h-full">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                 <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-                    {process.env.REACT_APP_CLINIC_NAME}
+                    {import.meta.env.VITE_CLINIC_NAME}
                 </h1>
                 {user && (
                     <p className="text-sm text-gray-600 dark:text-gray-300">
