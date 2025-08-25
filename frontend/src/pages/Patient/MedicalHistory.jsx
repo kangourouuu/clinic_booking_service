@@ -1,5 +1,6 @@
 import React from 'react'
 import Layout from '../../components/layout/Layout'
+import { FileText } from 'lucide-react'
 
 const MedicalHistory = () => {
     return (
@@ -7,8 +8,16 @@ const MedicalHistory = () => {
             <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 py-8">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center py-12">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-4">Lịch sử khám bệnh</h1>
-                        <p className="text-gray-600">Trang lịch sử khám bệnh đang được phát triển</p>
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">Lịch sử khám bệnh</h1>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Xem lại toàn bộ lịch sử khám bệnh, kết quả xét nghiệm và đơn thuốc của bạn.
+                        </p>
+                    </div>
+
+                    <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                        <FileText className="h-20 w-20 text-gray-300 mx-auto mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-800">Chưa có dữ liệu lịch sử khám bệnh</h3>
+                        <p className="mt-2 text-gray-600">Thông tin lịch sử khám bệnh của bạn sẽ hiển thị tại đây sau khi có dữ liệu.</p>
                     </div>
                 </div>
             </div>

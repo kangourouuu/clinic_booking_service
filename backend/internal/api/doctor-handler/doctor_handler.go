@@ -4,6 +4,7 @@ import (
 	"backend/internal/domain/dto"
 	"backend/internal/domain/dto/dtodoctor"
 	doctorusecase "backend/internal/usecase/doctor-usecase"
+	serviceusecase "backend/internal/usecase/service_usecase"
 	errorsresponse "backend/pkg/app_response/errors_response"
 	"backend/pkg/app_response/response"
 	"backend/pkg/common/pagination"
@@ -14,11 +15,15 @@ import (
 )
 
 type DoctorHandler struct {
-	doctorSvc doctorusecase.DoctorUsecase
+	doctorSvc           doctorusecase.DoctorUsecase
+	bookingQueueUsecase serviceusecase.BookingQueueUseCase
 }
 
-func NewDoctorHandler(doctorSvc doctorusecase.DoctorUsecase) *DoctorHandler {
-	return &DoctorHandler{doctorSvc: doctorSvc}
+func NewDoctorHandler(doctorSvc doctorusecase.DoctorUsecase, bookingQueueUsecase serviceusecase.BookingQueueUseCase) *DoctorHandler {
+	return &DoctorHandler{
+		doctorSvc:           doctorSvc,
+		bookingQueueUsecase: bookingQueueUsecase,
+	}
 }
 
 func (h *DoctorHandler) CreateDoctor(ctx *gin.Context) {
@@ -137,4 +142,23 @@ func (h *DoctorHandler) GetDoctorProfile(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &doctor, "Profile doctor has fetched"))
+}
+
+func (h *DoctorHandler) CreateDrugReceipt(ctx *gin.Context) {
+	var req dtodoctor.CreateDrugReceiptRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorsresponse.NewCustomErrResponse(http.StatusBadRequest, "invalid input"))
+		logrus.Error(err)
+		return
+	}
+
+	err := h.doctorSvc.CreateDrugReceipt(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occured"))
+		return
+	}
+
+	h.bookingQueueUsecase.UpdateBookingStatus(ctx, req.QueueId, "created drug receipt")
+
+	ctx.JSON(http.StatusCreated, response.NewCustomSuccessResponse(http.StatusCreated, &req, "Successfully placed the drug receipt"))
 }

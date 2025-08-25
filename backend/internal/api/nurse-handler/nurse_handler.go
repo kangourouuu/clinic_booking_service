@@ -367,7 +367,7 @@ func (h *NurseHandler) MarkCompleteQueue(ctx *gin.Context) {
 		return
 	}
 
-	err = h.mqUsecase.UpdateBookingStatus(ctx, queueId)
+	err = h.mqUsecase.UpdateBookingStatus(ctx, queueId, "completed")
 	if err != nil {
 		logrus.Errorf("Handler layer: %v", err)
 		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occur when updating complete status"))

@@ -33,6 +33,11 @@ export const authService = {
         return response.data
     },
 
+    loginAdmin: async (credentials) => {
+        const response = await api.post('/login/admin', credentials)
+        return response.data
+    },
+
     // Common logout (if needed)
     logout: async () => {
         const response = await api.post('/auth/logout')
@@ -102,7 +107,7 @@ export const patientService = {
 
     // Register for service
     registerService: async (serviceId, appointmentDate) => {
-        const response = await api.post(`/patient/register-service/${serviceId}`, { appointment_date: appointmentDate })
+        const response = await api.post(`/patient/register-service/${serviceId}`, { appointment: appointmentDate })
         return response.data
     },
 
@@ -114,6 +119,11 @@ export const patientService = {
 
     getHistoryBooking: async (page = 1, pageSize = 10) => {
         const response = await api.get(`/patient/history_booking?page=${page}&page_size=${pageSize}`);
+        return response.data
+    },
+
+    getBookingDetail: async (queueId) => {
+        const response = await api.get(`/patient/detail_booking?queueId=${queueId}`)
         return response.data
     },
 
@@ -301,6 +311,10 @@ export const doctorService = {
     },
     getPatientById: async (patientId) => {
         const response = await api.get(`/doctor/patient/${patientId}`)
+        return response.data
+    },
+    createDrugReceipt: async (receiptData) => {
+        const response = await api.post('/doctor/create-receipt', receiptData)
         return response.data
     }
 }

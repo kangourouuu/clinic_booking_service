@@ -62,7 +62,7 @@ const NurseLoginPage = () => {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-100 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md mx-auto">
                     {/* Header */}
                     <motion.div
@@ -72,13 +72,13 @@ const NurseLoginPage = () => {
                         className="text-center mb-8"
                     >
                         <Link to="/" className="inline-flex items-center space-x-2 mb-6">
-                            <div className="bg-green-600 p-2 rounded-xl">
-                                <Heart className="h-8 w-8 text-white" />
+                            <div className="bg-primary-600 p-2 rounded-full">
+                                <Heart className="h-10 w-10 text-white" />
                             </div>
                             <span className="text-2xl font-bold text-gray-900 font-medical">MediCare</span>
                         </Link>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">Đăng nhập Y tá</h1>
-                        <p className="text-gray-600">Chào mừng đội ngũ y tá trở lại</p>
+                        <p className="text-base text-gray-600">Chào mừng đội ngũ y tá trở lại</p>
                     </motion.div>
 
                     {/* Login Form */}
@@ -87,9 +87,9 @@ const NurseLoginPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                     >
-                        <Card className="border-0 medical-shadow">
+                        <Card className="shadow-lg border-gray-200/80">
                             <CardHeader className="text-center pb-4">
-                                <CardTitle className="text-xl flex items-center justify-center space-x-2">
+                                <CardTitle className="text-3xl font-bold text-gray-900 flex items-center justify-center space-x-2">
                                     <span className="text-2xl">👩‍⚕️</span>
                                     <span>Đăng nhập Y tá</span>
                                 </CardTitle>
@@ -105,9 +105,9 @@ const NurseLoginPage = () => {
                                             value={formData.phone_number}
                                             onChange={handleInputChange}
                                             required
-                                            className="pl-10"
+                                            className="pl-10 border-gray-300 focus:border-primary-500 focus:ring-primary-500"
                                         />
-                                        <Phone className="absolute left-3 top-9 h-5 w-5 text-gray-400" />
+                                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                     </div>
 
                                     <div className="relative">
@@ -119,46 +119,31 @@ const NurseLoginPage = () => {
                                             value={formData.password}
                                             onChange={handleInputChange}
                                             required
-                                            className="pl-10 pr-10"
+                                            className="pl-10 pr-10 border-gray-300 focus:border-primary-500 focus:ring-primary-500"
                                         />
-                                        <Lock className="absolute left-3 top-9 h-5 w-5 text-gray-400" />
+                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2"
                                         >
-                                            {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                                            {showPassword ? (
+                                                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                                            ) : (
+                                                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                                            )}
                                         </button>
                                     </div>
 
                                     <Button
                                         type="submit"
                                         loading={loading}
-                                        className="w-full py-3 text-lg bg-green-600 hover:bg-green-700"
+                                        className="w-full bg-primary-600 hover:bg-primary-700 text-white py-3 font-medium transition-all duration-200 transform hover:scale-105 shadow-lg"
                                         disabled={!formData.phone_number || !formData.password}
                                     >
                                         Đăng nhập
                                     </Button>
                                 </form>
-
-                                {/* Other Login Options */}
-                                <div className="text-center pt-4 border-t border-gray-200">
-                                    <p className="text-gray-600 mb-3">Đăng nhập với vai trò khác:</p>
-                                    <div className="flex space-x-2">
-                                        <Link
-                                            to="/patient/login"
-                                            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                        >
-                                            Bệnh nhân
-                                        </Link>
-                                        <Link
-                                            to="/doctor/login"
-                                            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium border border-gray-300 text-gray-700 bg-white rounded-lg hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                                        >
-                                            Bác sĩ
-                                        </Link>
-                                    </div>
-                                </div>
                             </CardContent>
                         </Card>
                     </motion.div>

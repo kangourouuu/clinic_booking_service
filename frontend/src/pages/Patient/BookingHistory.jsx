@@ -80,7 +80,7 @@ const BookingHistory = () => {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 py-8">
+            <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100 py-8">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Lịch sử Đặt lịch</h1>
@@ -97,25 +97,25 @@ const BookingHistory = () => {
                             <p className="text-xl font-semibold text-red-700">{error}</p>
                         </div>
                     ) : bookings.length === 0 ? (
-                        <div className="text-center py-12 px-6 bg-gray-50 rounded-lg shadow-md">
-                            <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-xl font-semibold text-gray-700">Không có lịch sử đặt lịch</p>
-                            <p className="text-gray-500 mt-2">Bạn chưa thực hiện đặt lịch khám nào.</p>
+                        <div className="text-center py-12 px-6 bg-white rounded-xl shadow-lg border border-gray-200">
+                            <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                            <p className="text-xl font-semibold text-gray-800">Không có lịch sử đặt lịch</p>
+                            <p className="text-gray-600 mt-2">Bạn chưa thực hiện đặt lịch khám nào.</p>
                         </div>
                     ) : (
                         <>
-                            <div className="shadow-2xl rounded-xl overflow-hidden bg-white">
+                            <div className="shadow-2xl rounded-xl overflow-hidden bg-white border border-gray-200">
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"><User className="inline h-5 w-5 mr-1 text-blue-600" />Tên bệnh nhân</th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Mail className="inline h-5 w-5 mr-1 text-blue-600" />Email</th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Phone className="inline h-5 w-5 mr-1 text-blue-600" />Số điện thoại</th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><FileText className="inline h-5 w-5 mr-1 text-blue-600" />Dịch vụ</th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Tag className="inline h-5 w-5 mr-1 text-blue-600" />Mã DV</th>
+                                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"><User className="inline h-5 w-5 mr-1 text-primary-600" />Tên bệnh nhân</th>
+                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Mail className="inline h-5 w-5 mr-1 text-primary-600" />Email</th>
+                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Phone className="inline h-5 w-5 mr-1 text-primary-600" />Số điện thoại</th>
+                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><FileText className="inline h-5 w-5 mr-1 text-primary-600" />Dịch vụ</th>
+                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Tag className="inline h-5 w-5 mr-1 text-primary-600" />Mã DV</th>
                                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><DollarSign className="inline h-5 w-5 mr-1 text-green-600" />Chi phí</th>
-                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Calendar className="inline h-5 w-5 mr-1 text-purple-600" />Ngày hẹn</th>
+                                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Calendar className="inline h-5 w-5 mr-1 text-primary-600" />Ngày hẹn</th>
                                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"><Calendar className="inline h-5 w-5 mr-1 text-gray-500" />Ngày tạo</th>
                                             </tr>
                                         </thead>
@@ -127,12 +127,12 @@ const BookingHistory = () => {
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{booking.patient_phone_number}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{booking.service_name}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
                                                             {booking.service_code}
                                                         </span>
                                                     </td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-green-600 font-semibold">{booking.cost?.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' })}</td>
-                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-purple-600">{formatDate(booking.appointment)}</td>
+                                                    <td className="whitespace-nowrap px-3 py-4 text-sm text-primary-600">{formatDate(booking.appointment)}</td>
                                                     <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{formatDate(booking.created_at)}</td>
                                                 </tr>
                                             ))}
@@ -147,11 +147,11 @@ const BookingHistory = () => {
                                     </p>
                                 </div>
                                 <div className="flex gap-2">
-                                    <Button onClick={handlePrevPage} disabled={currentPage === 1} variant="outline">
+                                    <Button onClick={handlePrevPage} disabled={currentPage === 1} variant="outline" className="border-gray-300 hover:bg-gray-100">
                                         <ChevronLeft className="h-5 w-5 mr-1" />
                                         Trước
                                     </Button>
-                                    <Button onClick={handleNextPage} disabled={currentPage >= totalPages} variant="outline">
+                                    <Button onClick={handleNextPage} disabled={currentPage >= totalPages} variant="outline" className="border-gray-300 hover:bg-gray-100">
                                         Sau
                                         <ChevronRight className="h-5 w-5 ml-1" />
                                     </Button>

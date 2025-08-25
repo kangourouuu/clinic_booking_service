@@ -18,7 +18,7 @@ const SectionTitle = ({ icon, title }) => (
 const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 'text', placeholder, children }) => (
     <div>
         <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
-            {icon}
+            {React.cloneElement(icon, { className: "h-4 w-4 mr-2 text-primary-600" })}
             {label}
         </label>
         {isEditing ? (
@@ -28,7 +28,7 @@ const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 't
                     name={name}
                     value={value || ''}
                     onChange={onChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
                     placeholder={placeholder}
                 />
             )
@@ -41,7 +41,7 @@ const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 't
 const MedicalHistoryList = ({ title, items, fieldName, isEditing, onAdd, onRemove, placeholder, icon, color }) => (
     <div>
         <label className="flex items-center text-sm font-medium text-gray-600 mb-2">
-            {icon}
+            {React.cloneElement(icon, { className: "h-4 w-4 mr-2 text-primary-600" })}
             {title}
         </label>
         {isEditing ? (
@@ -52,14 +52,14 @@ const MedicalHistoryList = ({ title, items, fieldName, isEditing, onAdd, onRemov
                             type="text"
                             value={item}
                             onChange={(e) => onAdd(fieldName, index, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-primary-500 focus:border-primary-500"
                         />
                         <button type="button" onClick={() => onRemove(fieldName, index)} className="p-1 text-red-500 hover:text-red-700">
                             <X className="h-4 w-4" />
                         </button>
                     </div>
                 ))}
-                <button type="button" onClick={() => onAdd(fieldName)} className="text-blue-600 hover:text-blue-800 text-sm flex items-center">
+                <button type="button" onClick={() => onAdd(fieldName)} className="text-primary-600 hover:text-primary-700 text-sm flex items-center">
                     <Plus className="h-4 w-4 mr-1" /> Thêm
                 </button>
             </div>
@@ -95,7 +95,7 @@ const BMIDisplay = ({ bmi }) => {
 
     return (
         <div className="space-y-2">
-            <p className="text-gray-900 font-bold text-lg">{bmi} - <span style={{ color }}>{status}</span></p>
+            <p className="text-gray-900 font-bold text-lg">{bmi} - <span className={`text-${color}-600`}>{status}</span></p>
             <div className="w-full bg-gray-200 rounded-full h-2.5">
                 <div className={`bg-${color}-500 h-2.5 rounded-full`} style={{ width: `${percentage}%` }}></div>
             </div>
@@ -311,7 +311,7 @@ const PatientProfile = () => {
                                         id="avatar-upload" type="file" accept="image/*" className="hidden"
                                         onChange={(e) => e.target.files[0] && setAvatarFile(e.target.files[0])}
                                     />
-                                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-2 shadow-lg cursor-pointer">
+                                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-2 shadow-lg cursor-pointer">
                                         <Edit3 className="h-4 w-4" />
                                     </label>
                                 </>
@@ -323,12 +323,12 @@ const PatientProfile = () => {
                         </div>
                         <div className="md:ml-auto flex gap-2 mt-4 md:mt-0">
                             {!isEditing ? (
-                                <Button onClick={() => setIsEditing(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                <Button onClick={() => setIsEditing(true)} className="bg-primary-600 hover:bg-primary-700 text-white">
                                     <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa
                                 </Button>
                             ) : (
                                 <>
-                                    <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white">
+                                    <Button onClick={handleSave} className="bg-primary-600 hover:bg-primary-700 text-white">
                                         <Save className="h-4 w-4 mr-2" /> Lưu
                                     </Button>
                                     <Button onClick={handleCancel} variant="outline">

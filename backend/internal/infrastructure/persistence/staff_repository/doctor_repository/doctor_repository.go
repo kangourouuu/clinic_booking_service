@@ -1,8 +1,8 @@
 package doctorrepository
 
 import (
-	"backend/internal/domain/staff/doctor"
 	"backend/internal/domain/dto/dtodoctor"
+	"backend/internal/domain/staff/doctor"
 	"backend/pkg/common/pagination"
 	"context"
 	"database/sql"

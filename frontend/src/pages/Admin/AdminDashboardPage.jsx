@@ -21,8 +21,8 @@ const AdminDashboardPage = () => {
   return (
     <div className="flex min-h-screen bg-gray-100 font-sans">
       <aside className="w-64 bg-white shadow-lg flex-shrink-0">
-        <div className="p-6 flex items-center space-x-3 border-b">
-          <div className="bg-blue-600 p-2 rounded-lg">
+        <div className="p-6 flex items-center space-x-3 border-b border-gray-200">
+          <div className="bg-primary-600 p-2 rounded-lg">
             <LayoutDashboard className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-xl font-bold text-gray-800">Admin Panel</h1>
@@ -36,7 +36,7 @@ const AdminDashboardPage = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
                   'w-full flex items-center px-6 py-3 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200',
-                  { 'bg-blue-50 text-blue-600 border-r-4 border-blue-500': activeTab === tab.id }
+                  { 'bg-primary-50 text-primary-600 border-r-4 border-primary-500': activeTab === tab.id }
                 )}
               >
                 <Icon className="h-5 w-5 mr-3" />

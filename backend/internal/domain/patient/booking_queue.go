@@ -18,13 +18,14 @@ const (
 const (
 	BookingStatusInProgress BookingStatus = "in progress"
 	BookingStatusWaiting    BookingStatus = "waiting"
+	BookingStatusReceipt    BookingStatus = "created drug receipt"
 	BookingStatusCompleted  BookingStatus = "completed"
 )
 
 type BookingQueue struct {
 	bun.BaseModel      `bun:"table:booking_queue"`
 	QueueId            int       `json:"queue_id" bun:"queue_id,pk,autoincrement"`
-	PatientId          uuid.UUID `json:"patient_id" bun:"patient_id"`
+	PatientId          uuid.UUID `json:"patient_id" bun:"patient_id,type:uuid"`
 	PatientName        string    `json:"patient_name" bun:"patient_name"`
 	PatientEmail       string    `json:"patient_email" bun:"patient_email"`
 	PatientPhoneNumber string    `json:"patient_phone_number" bun:"patient_phone_number"`
@@ -40,5 +41,6 @@ type BookingQueue struct {
 	AppointmentDate time.Time `json:"appointment" bun:"appointment,default:current_timestamp"`
 	CreatedAt       time.Time `json:"created_at" bun:"created_at,default:current_timestamp"`
 
-	Patient *Patient `bun:"rel:belongs-to,join:patient_id=patient_id"`
+	Patient     *Patient     `bun:"rel:belongs-to,join:patient_id=patient_id"`
+	DrugReceipt *DrugReceipt `bun:"rel:has-one,join:queue_id=queue_id"`
 }

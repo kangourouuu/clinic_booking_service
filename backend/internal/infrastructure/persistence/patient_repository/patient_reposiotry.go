@@ -327,10 +327,20 @@ func (r *patientRepo) migrate() error {
 	_, err = r.db.NewCreateTable().
 		Model(&patient.BookingQueue{}).
 		IfNotExists().
-		ForeignKey(`("patient_id") REFERENCES "booking_queue" ("patient_id") ON DELETE CASCADE`).
+		ForeignKey(`("patient_id") REFERENCES "patient" ("patient_id") ON DELETE CASCADE`).
 		Exec(ctx)
 	if err != nil {
 		logrus.Errorf("failed to migrate booking_queue table: %v", err)
+		return err
+	}
+
+	_, err = r.db.NewCreateTable().
+	Model(&patient.DrugReceipt{}).
+	IfNotExists().
+	WithForeignKeys().
+	Exec(ctx)
+	if err != nil {
+		logrus.Errorf("failed to migrate drug_receipt table: %v", err)
 		return err
 	}
 

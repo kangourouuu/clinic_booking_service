@@ -8,10 +8,12 @@ import (
 	paymenthandler "backend/internal/api/payment_handler"
 	servicehandler "backend/internal/api/service_handler"
 	"backend/internal/infrastructure/db"
+	"backend/internal/usecase"
 	cloudinaryutils "backend/pkg/common/utils/cloudinary_utils"
 
 	patientrepository "backend/internal/infrastructure/persistence/patient_repository"
 	persistence "backend/internal/infrastructure/persistence/service_repository"
+	staffrepository "backend/internal/infrastructure/persistence/staff_repository"
 	doctorrepository "backend/internal/infrastructure/persistence/staff_repository/doctor_repository"
 	nurserepository "backend/internal/infrastructure/persistence/staff_repository/nurse_repository"
 	"backend/internal/infrastructure/redis"
@@ -28,7 +30,7 @@ import (
 
 // localhost:9000/api
 func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeue.RabbitMQUsecase, rc *redis.RedisClient) {
-
+	drugRecepitRepository := doctorrepository.NewDrugReceiptRepository(db.DatabaseClient.GetDB())
 	messageQueueRepo := persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB())
 	messageQueueUsecase := serviceusecase.NewBookingQueueUsecase(messageQueueRepo)
 
@@ -39,8 +41,8 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 
 	// doctor
 	doctorRepo := doctorrepository.NewDoctorRepo(db.DatabaseClient.GetDB())
-	doctorService := doctorusecase.NewDoctorUsecase(doctorRepo)
-	doctorHandler := doctorhandler.NewDoctorHandler(doctorService)
+	doctorService := doctorusecase.NewDoctorUsecase(doctorRepo, drugRecepitRepository)
+	doctorHandler := doctorhandler.NewDoctorHandler(doctorService, messageQueueUsecase)
 
 	// categories
 	categoryRepo := persistence.NewServiceCategoryRepository(db.DatabaseClient.GetDB())
@@ -67,9 +69,14 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 	patientService := patientUsecase.NewPatientService(patientRepo, *rc, avatarUploader)
 	patientHandler := patientHandler.NewPatientHandler(patientService, serviceUsecase, messageQueueUsecase, paymentUsecase)
 
+	adminRepository := staffrepository.NewAdminRepository(db.DatabaseClient.GetDB())
+	adminUsecase := usecase.NewAdminUsecase(adminRepository)
+	adminHandler := NewAdminHandler(adminUsecase)
+
 	r.POST("/login/patient", patientHandler.LoginPatient)
 	r.POST("/login/nurse", nurseHandler.LoginNurse)
 	r.POST("/login/doctor", doctorHandler.LoginDoctor)
+	r.POST("/login/admin", adminHandler.LoginAdmin)
 	r.POST("/register", patientHandler.CreatePatient)
 
 	adminGroup := r.Group("/admin")
@@ -106,6 +113,7 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 		patientGroup.PUT("/:id", patientHandler.UpdatePatient)
 
 		patientGroup.GET("/history_booking", patientHandler.GetBookingQueuesByPatientId)
+		patientGroup.GET("/detail_booking", patientHandler.GetDetailBookingByQueueId)
 		patientGroup.POST("/register-service/:serviceId", patientHandler.PatientRegisterService)
 
 		patientGroup.GET("/service/categories", categoryHandler.GetAllCategories)
@@ -134,5 +142,6 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 		doctorGroup.PUT("/:id", doctorHandler.UpdateDoctor)
 		doctorGroup.GET("/patient/:id", patientHandler.GetPatientById)
 		doctorGroup.GET("/queues", nurseHandler.GetAllBookingQueues)
+		doctorGroup.POST("/create-receipt", doctorHandler.CreateDrugReceipt)
 	}
 }

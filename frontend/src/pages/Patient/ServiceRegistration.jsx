@@ -142,8 +142,12 @@ const ServiceRegistration = () => {
         try {
             setLoading(prev => ({ ...prev, submitting: true }))
 
+            // Format date from YYYY-MM-DD to DD/MM/YYYY
+            const [year, month, day] = appointmentDate.split('-')
+            const formattedDate = `${day}/${month}/${year}`
+
             // Call API to register service and get Stripe checkout URL
-            const response = await patientService.registerService(selectedService, appointmentDate) // Pass appointmentDate
+            const response = await patientService.registerService(selectedService, formattedDate)
 
             if (response.data && response.data.url) {
                 // Redirect to Stripe checkout page
@@ -157,6 +161,7 @@ const ServiceRegistration = () => {
                     setSelectedCategory('')
                     setSelectedSubcategory('')
                     setSelectedService('')
+                    setAppointmentDate('')
                     setSuccess(false)
                 }, 3000)
             }

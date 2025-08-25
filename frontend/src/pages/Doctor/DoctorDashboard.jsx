@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Layout from '../../components/layout/Layout'
 import { Users, Calendar, User, FileText, Clock, TrendingUp, CheckSquare, Pill, Phone, Mail, Wifi, WifiOff, RefreshCw, Stethoscope, Heart } from 'lucide-react'
@@ -7,23 +7,23 @@ import { useAuth } from '../../context/AuthContext'
 import useWebSocket from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 import Button from '../../components/ui/Button'
+import { Loading } from '../../components/ui/Loading'
+import CreateDrugReceiptModal from '../../components/ui/CreateDrugReceiptModal'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 
-const StatCard = ({ title, value, icon, color, change }) => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 border-l-4 border-blue-500">
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
-                <p className="text-3xl font-bold text-gray-900">{value}</p>
-            </div>
-            <div className={`p-3 rounded-full bg-blue-100 text-blue-600`}>
-                {icon}
-            </div>
-        </div>
-        <div className="mt-4 flex items-center">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-sm text-green-500 font-medium">{change}</span>
-            <span className="text-sm text-gray-500 ml-2">so với tuần trước</span>
-        </div>
+const StatCard = ({ title, value, icon, color }) => (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full" whileHover={{ y: -5 }}>
+        <Card className="h-full shadow-lg border-gray-200/80 hover:border-primary-300/50 hover:shadow-xl transition-all duration-300 group">
+            <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-gray-500">{title}</p>
+                    <p className="text-3xl font-bold text-gray-900">{value}</p>
+                </div>
+                <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600 group-hover:scale-110 transition-transform duration-300`}>
+                    {React.cloneElement(icon, { className: "h-6 w-6" })}
+                </div>
+            </CardContent>
+        </Card>
     </motion.div>
 )
 
@@ -34,6 +34,7 @@ const DoctorDashboard = () => {
     const [selectedQueue, setSelectedQueue] = useState(null)
     const [loading, setLoading] = useState(true)
     const [loadingPatient, setLoadingPatient] = useState(false)
+    const [isCreateReceiptModalOpen, setCreateReceiptModalOpen] = useState(false)
 
     const wsUrl = process.env.NODE_ENV === 'development' ? 'ws://localhost:9000/api/doctor/queues' : `wss://${window.location.host}/api/doctor/queues`
 
@@ -119,26 +120,51 @@ const DoctorDashboard = () => {
         }
     }
 
-    const formatDate = (dateString) => dateString ? new Date(dateString).toLocaleDateString('vi-VN') : 'N/A'
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        
+        let date;
+        // Handle dd/mm/yyyy format from backend
+        if (/^\d{1,2}[-\/]\d{1,2}[-\/]\d{4}/.test(dateString)) {
+            const parts = dateString.split(/[-\/]/);
+            // new Date(year, month-1, day)
+            date = new Date(parts[2], parts[1] - 1, parts[0]);
+        } else {
+            // Fallback for ISO strings
+            date = new Date(dateString);
+        }
+    
+        if (isNaN(date.getTime())) {
+            return 'N/A';
+        }
+    
+        return date.toLocaleDateString('vi-VN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+    }
 
     if (loading && !queues.length) {
-        return <Layout><div className="flex items-center justify-center min-h-screen"><Loader className="h-12 w-12 animate-spin text-blue-600"/></div></Layout>
+        return <Layout><div className="flex items-center justify-center min-h-screen"><Loading size="lg"/></div></Layout>
     }
 
     return (
         <Layout>
             <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
                 <div className="max-w-8xl mx-auto">
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-900">Bảng điều khiển</h1>
-                        <p className="text-gray-600 mt-1">Chào mừng trở lại, Bác sĩ {user?.full_name || '...'}!</p>
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
+                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full"></div>
+                        <h1 className="text-4xl font-bold z-10 relative">Bảng điều khiển</h1>
+                        <p className="mt-2 text-primary-100 z-10 relative">Chào mừng trở lại, Bác sĩ {user?.full_name || '...'}!</p>
                     </motion.div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        <StatCard title="Tổng Hàng Đợi" value={stats.totalQueues} icon={<Users className="h-6 w-6" />} color="blue" change="+5%" />
-                        <StatCard title="Đang Chờ Khám" value={stats.pendingQueues} icon={<Clock className="h-6 w-6" />} color="yellow" change="+12%" />
-                        <StatCard title="Đã Khám Hôm Nay" value={stats.completedToday} icon={<CheckSquare className="h-6 w-6" />} color="green" change="+8%" />
-                        <StatCard title="Tổng Bệnh Nhân" value={stats.totalPatients} icon={<Heart className="h-6 w-6" />} color="purple" change="+3%" />
+                        <StatCard title="Tổng Hàng Đợi" value={stats.totalQueues} icon={<Users className="h-6 w-6" />} color="blue" />
+                        <StatCard title="Đang Chờ Khám" value={stats.pendingQueues} icon={<Clock className="h-6 w-6" />} color="yellow" />
+                        <StatCard title="Đã Khám Hôm Nay" value={stats.completedToday} icon={<CheckSquare className="h-6 w-6" />} color="green" />
+                        <StatCard title="Tổng Bệnh Nhân" value={stats.totalPatients} icon={<Heart className="h-6 w-6" />} color="purple" />
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -173,12 +199,9 @@ const DoctorDashboard = () => {
                                     {loadingPatient ? <div className="flex items-center justify-center h-full"><Loading size="md" text="" /></div> : (
                                         <div className="space-y-6">
                                             <div className="p-6 rounded-xl bg-gray-50 border border-gray-200">
-                                                <div className="flex items-center gap-4">
-                                                    <img src={selectedQueue.patientDetails?.photo || '/path/to/default-avatar.png'} alt="Avatar" className="w-16 h-16 rounded-full object-cover bg-gray-200"/>
-                                                    <div>
-                                                        <h3 className="text-xl font-bold text-gray-900">{selectedQueue.patientDetails?.full_name || selectedQueue.patient_name}</h3>
-                                                        <p className="text-gray-600">Ngày sinh: {formatDate(selectedQueue.patientDetails?.dob)}</p>
-                                                    </div>
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-gray-900">{selectedQueue.patientDetails?.full_name || selectedQueue.patient_name}</h3>
+                                                    <p className="text-gray-600">Ngày sinh: {formatDate(selectedQueue.patientDetails?.dob)}</p>
                                                 </div>
                                                 <div className="grid grid-cols-2 gap-4 mt-4 text-sm">
                                                     <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-gray-400"/><span>{selectedQueue.patientDetails?.email || 'N/A'}</span></div>
@@ -186,11 +209,11 @@ const DoctorDashboard = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="p-6 rounded-xl bg-blue-50 border border-blue-200">
-                                                <h4 className="font-semibold text-blue-800 mb-3">Thông Tin Khám</h4>
+                                            <div className="p-6 rounded-xl bg-primary-50 border border-primary-200">
+                                                <h4 className="font-semibold text-primary-800 mb-3">Thông Tin Khám</h4>
                                                 <div className="space-y-2 text-sm">
                                                     <div className="flex justify-between"><span>Dịch vụ:</span><strong className="text-right">{selectedQueue.service_name}</strong></div>
-                                                    <div className="flex justify-between"><span>Thời gian chờ:</span><strong className="text-right">{formatDate(selectedQueue.created_at)}</strong></div>
+                                                    <div className="flex justify-between"><span>Ngày đặt lịch:</span><strong className="text-right">{formatDate(selectedQueue.created_at)}</strong></div>
                                                     <div className="flex justify-between"><span>Số thứ tự:</span><strong className="text-right">#{selectedQueue.queue_id}</strong></div>
                                                 </div>
                                             </div>
@@ -206,15 +229,14 @@ const DoctorDashboard = () => {
                                                 </div>
                                             )}
 
-                                            <div className="flex gap-4 pt-6 border-t">
-                                                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white"><Pill className="h-4 w-4 mr-2"/>Tạo đơn thuốc</Button>
-                                                <Button className="w-full" variant="secondary" onClick={() => completeQueue(selectedQueue.queue_id)}><CheckSquare className="h-4 w-4 mr-2"/>Hoàn thành khám</Button>
+                                            <div className="pt-6 border-t">
+                                                <Button onClick={() => setCreateReceiptModalOpen(true)} className="w-full bg-primary-600 hover:bg-primary-700 text-white"><Pill className="h-4 w-4 mr-2"/>Tạo đơn thuốc</Button>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-center">
+                                <div className="flex flex-col items-center justify-center h-full text-center bg-white rounded-2xl shadow-lg p-6">
                                     <User className="h-20 w-20 text-gray-300" />
                                     <p className="mt-4 text-lg font-medium text-gray-600">Chọn bệnh nhân từ hàng đợi</p>
                                     <p className="text-sm text-gray-400">Chi tiết thông tin sẽ được hiển thị tại đây.</p>
@@ -222,6 +244,17 @@ const DoctorDashboard = () => {
                             )}
                         </motion.div>
                     </div>
+                    {selectedQueue && (
+                        <CreateDrugReceiptModal
+                            isOpen={isCreateReceiptModalOpen}
+                            onClose={() => setCreateReceiptModalOpen(false)}
+                            queue={selectedQueue}
+                            onReceiptCreated={() => {
+                                toast.success('Đơn thuốc đã được tạo thành công!');
+                                // Optionally, you can refresh patient data here
+                            }}
+                        />
+                    )}
                 </div>
             </div>
         </Layout>

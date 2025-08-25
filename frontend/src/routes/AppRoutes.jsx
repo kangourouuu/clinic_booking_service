@@ -7,7 +7,6 @@ import ProtectedRoute from '../components/auth/ProtectedRoute'
 
 // Public Pages
 import HomePage from '../pages/Home/HomePage'
-import LoginPage from '../pages/Auth/LoginPage'
 import RegisterPage from '../pages/Auth/RegisterPage'
 import PatientLoginPage from '../pages/Auth/PatientLoginPage'
 import NurseLoginPage from '../pages/Auth/NurseLoginPage'
@@ -59,7 +58,7 @@ const AppRoutes = () => {
             {/* Auth Routes - Redirect to dashboard if already logged in */}
             <Route
                 path="/auth/login"
-                element={<LoginPage />}
+                element={<Navigate to="/patient/login" replace />}
             />
             <Route
                 path="/patient/login"
@@ -92,7 +91,7 @@ const AppRoutes = () => {
                 }
             />
             <Route
-                path="/auth/admin"
+                path="/admin/login"
                 element={
                     user ? (
                         <Navigate to="/admin/dashboard" replace />

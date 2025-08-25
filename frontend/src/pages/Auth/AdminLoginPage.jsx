@@ -5,7 +5,7 @@ import { authService } from '../../services/apiServices';
 import toast from 'react-hot-toast';
 
 const AdminLoginPage = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,17 +15,11 @@ const AdminLoginPage = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      // The backend does not have an admin login endpoint, so we will use a mock login for now.
-      // In a real-world application, you would replace this with a call to your actual admin login API endpoint.
-      // const response = await authService.loginAdmin({ email, password });
-      // const { user, token } = response;
+      const response = await authService.loginAdmin({ username, password });
+      const { user, token } = response.data;
 
-      // Simulate a successful login for demonstration purposes
-      const mockUser = { name: 'Admin User', role: 'admin' };
-      const mockToken = 'mock-admin-token';
-
-      if (mockUser && mockToken) {
-        await login(mockUser, mockToken, 'admin');
+      if (user && token) {
+        await login(user, token, 'admin');
         toast.success('Admin login successful!');
         navigate('/admin/dashboard');
       } else {
@@ -45,11 +39,11 @@ const AdminLoginPage = () => {
         <h2 className="text-2xl font-bold text-center text-gray-700">Admin Login</h2>
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="text-sm font-bold text-gray-600">Email</label>
+            <label className="text-sm font-bold text-gray-600">Username</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2 mt-2 text-gray-700 bg-gray-200 border rounded-lg focus:outline-none focus:bg-white focus:border-indigo-500"
               required
             />

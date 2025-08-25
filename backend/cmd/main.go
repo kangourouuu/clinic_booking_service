@@ -69,6 +69,10 @@ func main() {
 	defer cancel()
 
 	msgUsecase := messagequeue.NewRabbitMQUsecase(rabbitMQClient, persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB()), *redisClient)
+	engine := server.NewEngine()
+
+	apiRoutes := engine.Group("/api")
+	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient)
 	go func() {
 		err := msgUsecase.StartBookingConsumer(ctx)
 		if err != nil {
@@ -77,13 +81,7 @@ func main() {
 		}
 	}()
 
-	engine := server.NewEngine()
-
-	apiRoutes := engine.Group("/api")
-	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient)
-
 	server := server.New(config.AppConfig.Main.Port, engine)
-
 	if err := server.Run(); err != nil {
 		logrus.Info("Can not connect to service")
 	}

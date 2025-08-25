@@ -13,6 +13,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -24,14 +25,18 @@ type DoctorUsecase interface {
 	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
 	UpdateDoctorById(ctx context.Context, id string, ud *dtodoctor.UpdateDoctorRequest) error
 	DeleteDoctorById(ctx context.Context, id string) error
+	CreateDrugReceipt(ctx context.Context, dr *dtodoctor.CreateDrugReceiptRequest) error
 }
 
 type doctorUsecase struct {
-	repo doctorrepository.DoctorRepository
+	repo                  doctorrepository.DoctorRepository
+	drugReceiptRepository doctorrepository.DrugReceiptRepository
 }
 
-func NewDoctorUsecase(repo doctorrepository.DoctorRepository) DoctorUsecase {
-	return &doctorUsecase{repo: repo}
+func NewDoctorUsecase(repo doctorrepository.DoctorRepository, drugReceiptRepository doctorrepository.DrugReceiptRepository) DoctorUsecase {
+	return &doctorUsecase{
+		repo:                  repo,
+		drugReceiptRepository: drugReceiptRepository}
 }
 
 func (s *doctorUsecase) CreateDoctor(ctx context.Context, req *dtodoctor.CreateDoctorRequest) error {
@@ -166,6 +171,17 @@ func (r *doctorUsecase) DeleteDoctorById(ctx context.Context, doctorId string) e
 	err := r.repo.DeleteDoctorById(ctx, doctorId)
 	if err != nil {
 		logrus.Errorf("failed to delete Doctor by ID %s: %v", doctorId, err)
+		return err
+	}
+	return nil
+}
+
+func (s *doctorUsecase) CreateDrugReceipt(ctx context.Context, dr *dtodoctor.CreateDrugReceiptRequest) error {
+	dr.DrugReceiptId = uuid.New()
+	req := s.drugReceiptRepository.BuildModelForRequest(dr)
+
+	if err := s.drugReceiptRepository.CreateDrugReceipt(ctx, req); err != nil {
+		logrus.Errorf("Usecase layer %+v", err)
 		return err
 	}
 	return nil

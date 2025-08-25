@@ -12,8 +12,8 @@ import toast from 'react-hot-toast'
 const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 'text', placeholder, children }) => (
     <div>
         <label className="block text-sm font-medium text-gray-600 mb-1 flex items-center">
-            {icon}
-            <span className="ml-2">{label}</span>
+            {React.cloneElement(icon, { className: "h-4 w-4 mr-2 text-primary-600" })}
+            {label}
         </label>
         {isEditing ? (
             children || (
@@ -22,7 +22,7 @@ const ProfileField = ({ icon, label, value, isEditing, name, onChange, type = 't
                     name={name}
                     value={value || ''}
                     onChange={onChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 transition"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
                     placeholder={placeholder}
                 />
             )
@@ -121,30 +121,55 @@ const NurseProfile = () => {
                 <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row items-center gap-8 mb-8">
                         <div className="relative">
-                            <img src={profileData?.photo || '/path/to/default-avatar.png'} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"/>
+                            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-200 flex items-center justify-center">
+                                {profileData?.photo ? (
+                                    <img src={profileData.photo} alt="Avatar" className="w-full h-full object-cover" />
+                                ) : (
+                                    <User className="h-16 w-16 text-gray-400" />
+                                )}
+                            </div>
+                            {isEditing && (
+                                <>
+                                    <input
+                                        id="avatar-upload" type="file" accept="image/*" className="hidden"
+                                        onChange={(e) => e.target.files[0] && setAvatarFile(e.target.files[0])}
+                                    />
+                                    <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 bg-primary-600 hover:bg-primary-700 text-white rounded-full p-2 shadow-lg cursor-pointer">
+                                        <Edit3 className="h-4 w-4" />
+                                    </label>
+                                </>
+                            )}
                         </div>
                         <div className="text-center md:text-left">
                             <h1 className="text-4xl font-bold text-gray-900">{profileData?.full_name}</h1>
-                            <p className="text-lg text-green-600 font-semibold mt-1">Điều dưỡng</p>
+                            <p className="text-lg text-primary-600 font-semibold mt-1">Điều dưỡng</p>
                         </div>
                         <div className="md:ml-auto flex gap-2 mt-4 md:mt-0">
                             {!isEditing ? (
-                                <Button onClick={() => setIsEditing(true)} className="bg-green-600 hover:bg-green-700 text-white"><Edit3 className="h-4 w-4 mr-2" />Chỉnh sửa</Button>
+                                <Button onClick={() => setIsEditing(true)} className="bg-primary-600 hover:bg-primary-700 text-white">
+                                    <Edit3 className="h-4 w-4 mr-2" /> Chỉnh sửa
+                                </Button>
                             ) : (
                                 <>
-                                    <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700 text-white"><Save className="h-4 w-4 mr-2" />Lưu</Button>
-                                    <Button onClick={handleCancel} variant="outline"><X className="h-4 w-4 mr-2" />Hủy</Button>
+                                    <Button onClick={handleSave} className="bg-primary-600 hover:bg-primary-700 text-white">
+                                        <Save className="h-4 w-4 mr-2" /> Lưu
+                                    </Button>
+                                    <Button onClick={handleCancel} variant="outline">
+                                        <X className="h-4 w-4 mr-2" /> Hủy
+                                    </Button>
                                 </>
                             )}
                         </div>
                     </motion.div>
 
                     <Card className="shadow-xl border-0 bg-white">
-                        <CardHeader>
-                            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                                <button onClick={() => setActiveTab('personal')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'personal' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin cá nhân</button>
-                                <button onClick={() => setActiveTab('professional')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'professional' ? 'border-green-500 text-green-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin nghề nghiệp</button>
-                            </nav>
+                                                <CardHeader>
+                            <div className="border-b border-gray-200">
+                                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                                    <button onClick={() => setActiveTab('personal')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'personal' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin cá nhân</button>
+                                    <button onClick={() => setActiveTab('professional')} className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === 'professional' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}>Thông tin nghề nghiệp</button>
+                                </nav>
+                            </div>
                         </CardHeader>
                         <CardContent className="p-6">
                             {activeTab === 'personal' && (

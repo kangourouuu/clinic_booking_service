@@ -180,7 +180,7 @@ const Header = () => {
                                 <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => navigate('/auth/login')}
+                                    onClick={() => navigate('/patient/login')}
                                     className="hidden sm:inline-flex"
                                 >
                                     Đăng nhập
@@ -232,7 +232,7 @@ const Header = () => {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
-                                            navigate('/auth/login')
+                                            navigate('/patient/login')
                                             setIsMenuOpen(false)
                                         }}
                                         className="w-full justify-start"

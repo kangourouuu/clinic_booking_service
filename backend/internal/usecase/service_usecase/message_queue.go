@@ -13,7 +13,8 @@ import (
 type BookingQueueUseCase interface {
 	GetBookingQueues(ctx context.Context, pagination *pagination.Pagination) ([]*dtoqueue.BookingQueueResponse, error)
 	GetHistoryQueuesByPatientId(ctx context.Context, pagination *pagination.Pagination, patientId uuid.UUID) ([]*dtoqueue.BookingQueueResponse, error)
-	UpdateBookingStatus(ctx context.Context, queueId int) error
+	GetDetailsBookingByQueueId(ctx context.Context, queueId int) (*dtoqueue.BookingQueueResponse, error)
+	UpdateBookingStatus(ctx context.Context, queueId int, status string) error
 	DeleteBookingById(ctx context.Context, queueId int) error
 }
 
@@ -22,7 +23,8 @@ type bookingQueueUseCase struct {
 }
 
 func NewBookingQueueUsecase(bqRepo persistence.BookingQueuueRepository) BookingQueueUseCase {
-	return &bookingQueueUseCase{bqRepo: bqRepo}
+	return &bookingQueueUseCase{
+		bqRepo: bqRepo}
 }
 
 func (s *bookingQueueUseCase) GetBookingQueues(ctx context.Context, pagination *pagination.Pagination) ([]*dtoqueue.BookingQueueResponse, error) {
@@ -49,8 +51,19 @@ func (s *bookingQueueUseCase) GetHistoryQueuesByPatientId(ctx context.Context, p
 	return bqList, nil
 }
 
-func (s *bookingQueueUseCase) UpdateBookingStatus(ctx context.Context, queueId int) error {
-	err := s.bqRepo.UpdateBookingStatus(ctx, queueId, "completed")
+func (s *bookingQueueUseCase) GetDetailsBookingByQueueId(ctx context.Context, queueId int) (*dtoqueue.BookingQueueResponse, error) {
+	resp, err := s.bqRepo.GetDetailsBookingByQueueId(ctx, queueId)
+	if err != nil {
+		logrus.Errorf("Usecase layer %+v", err)
+		return nil, err
+	}
+	response := dtoqueue.ConvertToResponse(resp)
+
+	return response, nil
+}
+
+func (s *bookingQueueUseCase) UpdateBookingStatus(ctx context.Context, queueId int, status string) error {
+	err := s.bqRepo.UpdateBookingStatus(ctx, queueId, status)
 	if err != nil {
 		logrus.Errorf("Usecase layer: %v", err)
 		return err

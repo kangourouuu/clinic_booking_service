@@ -43,7 +43,7 @@ const TestModePanel = () => {
     }
 
     const openRoleSelector = () => {
-        window.location.href = '/auth/login'
+        window.location.href = '/patient/login'
     }
 
     // Only show in development

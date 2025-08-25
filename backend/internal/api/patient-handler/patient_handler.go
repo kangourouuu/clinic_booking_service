@@ -9,6 +9,7 @@ import (
 	patientusecase "backend/internal/usecase/patient-usecase"
 	paymentusecase "backend/internal/usecase/payment_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
+	"strconv"
 
 	errorsresponse "backend/pkg/app_response/errors_response"
 	"backend/pkg/app_response/response"
@@ -112,14 +113,10 @@ func (h *PatientHandler) UpdatePatient(ctx *gin.Context) {
 		return
 	}
 
-	// Log all form values
-	logrus.Infof("Form values:")
 	for key, values := range ctx.Request.MultipartForm.Value {
 		logrus.Infof("  %s: %v", key, values)
 	}
 
-	// Log all files
-	logrus.Infof("Form files:")
 	for key, files := range ctx.Request.MultipartForm.File {
 		logrus.Infof("  %s: %d files", key, len(files))
 		for i, file := range files {
@@ -298,13 +295,28 @@ func (h *PatientHandler) GetBookingQueuesByPatientId(ctx *gin.Context) {
 		return
 	}
 
-	logrus.Info(resp)
-	logrus.Info(&resp)
-	logrus.Info(patientId)
 	fullResp := &dto.PaginationResponse[dtoqueue.BookingQueueResponse]{
 		Data:       resp,
 		Pagination: &paginationReq,
 	}
 
 	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &fullResp, "History of booking"))
+}
+
+func (h *PatientHandler) GetDetailBookingByQueueId(ctx *gin.Context) {
+	id := ctx.Query("queueId")
+	queueId, err := strconv.Atoi(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorsresponse.NewCustomErrResponse(http.StatusBadRequest, "Invalid Queue ID"))
+		return
+	}
+
+	resp, err := h.bookingQueueUsecase.GetDetailsBookingByQueueId(ctx, queueId)
+	if err != nil {
+		logrus.Error(err)
+		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occur in server"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, response.NewCustomSuccessResponse(http.StatusOK, &resp, "Data fetched"))
 }

@@ -7,24 +7,27 @@ import { useAuth } from '../../context/AuthContext'
 import useWebSocket from '../../hooks/useWebSocket'
 import toast from 'react-hot-toast'
 import Button from '../../components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 
 const StatCard = ({ title, value, icon, color }) => (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className={`bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 border-l-4 border-${color}-500`}>
-        <div className="flex items-center justify-between">
-            <div>
-                <p className="text-sm font-medium text-gray-500">{title}</p>
-                <p className="text-3xl font-bold text-gray-900">{value}</p>
-            </div>
-            <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600`}>
-                {icon}
-            </div>
-        </div>
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="h-full" whileHover={{ y: -5 }}>
+        <Card className="h-full shadow-lg border-gray-200/80 hover:border-primary-300/50 hover:shadow-xl transition-all duration-300 group">
+            <CardContent className="p-6 flex items-center justify-between">
+                <div>
+                    <p className="text-sm font-medium text-gray-500">{title}</p>
+                    <p className="text-3xl font-bold text-gray-900">{value}</p>
+                </div>
+                <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600 group-hover:scale-110 transition-transform duration-300`}>
+                    {React.cloneElement(icon, { className: "h-6 w-6" })}
+                </div>
+            </CardContent>
+        </Card>
     </motion.div>
 )
 
 const QuickActionButton = ({ title, icon, color }) => (
-    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg hover:shadow-xl transition-all`}>
-        {icon}
+    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={`flex flex-col items-center justify-center p-4 rounded-xl bg-gradient-to-br from-${color}-500 to-${color}-600 text-white shadow-lg hover:shadow-xl transition-all duration-300`}>
+        {React.cloneElement(icon, { className: "h-8 w-8" })}
         <span className="mt-2 text-sm font-semibold">{title}</span>
     </motion.button>
 )
@@ -115,14 +118,14 @@ const NurseDashboard = () => {
         <Layout>
             <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
                 <div className="max-w-7xl mx-auto">
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-                        <div>
-                            <h1 className="text-4xl font-bold text-gray-900">Bảng điều khiển</h1>
-                            <p className="text-gray-600 mt-1">Chào mừng, Y tá {user?.full_name || '...'}!</p>
-                        </div>
-                        <div className="flex items-center gap-2 mt-4 sm:mt-0 bg-white p-2 rounded-full shadow-sm">
-                            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-                            <span className="text-sm font-medium text-gray-700">{isConnected ? 'Đã kết nối' : 'Mất kết nối'}</span>
+                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="bg-gradient-to-r from-primary-600 to-primary-700 rounded-2xl shadow-xl p-8 mb-8 text-white relative overflow-hidden">
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full"></div>
+                        <div className="absolute -bottom-12 -left-12 w-32 h-32 bg-white/10 rounded-full"></div>
+                        <h1 className="text-4xl font-bold z-10 relative">Bảng điều khiển</h1>
+                        <p className="mt-2 text-primary-100 z-10 relative">Chào mừng, Y tá {user?.full_name || '...'}!</p>
+                        <div className="flex items-center gap-2 mt-4 z-10 relative">
+                            <div className={`w-3 h-3 rounded-full ${isConnected ? 'bg-green-400 animate-pulse' : 'bg-red-400'}`}></div>
+                            <span className="text-sm font-medium text-white">{isConnected ? 'Đã kết nối' : 'Mất kết nối'}</span>
                         </div>
                     </motion.div>
 
@@ -140,17 +143,19 @@ const NurseDashboard = () => {
                             </div>
                             <div className="space-y-3 h-[45vh] overflow-y-auto">
                                 {loading && !queues.length ? <p>Đang tải...</p> : queues.length > 0 ? queues.map(queue => (
-                                    <div key={queue.queue_id} className="flex items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
-                                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center"><User className="h-5 w-5 text-green-600" /></div>
+                                    <div key={queue.queue_id} className="flex items-center p-4 rounded-xl border border-gray-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all duration-300">
+                                        <div className="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                            <User className="h-6 w-6 text-primary-600" />
+                                        </div>
                                         <div className="ml-4 flex-grow">
                                             <p className="font-semibold text-gray-800">{queue.patient_name || 'N/A'}</p>
                                             <p className="text-sm text-gray-500">{queue.service_name || 'Dịch vụ khám'}</p>
                                         </div>
-                                        <div className="text-right">
+                                        <div className="text-right flex-shrink-0">
                                             <p className="text-sm font-medium text-gray-700">{formatDate(queue.created_at)}</p>
-                                            <span className="text-xs text-yellow-600">Đang chờ</span>
+                                            <span className="text-xs font-semibold text-yellow-600 bg-yellow-100 px-2 py-0.5 rounded-full">Đang chờ</span>
                                         </div>
-                                        <Button size="sm" className="ml-4 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleCompleteQueue(queue.queue_id)}>Hoàn thành</Button>
+                                        <Button size="sm" className="ml-4 bg-primary-600 hover:bg-primary-700 text-white" onClick={() => handleCompleteQueue(queue.queue_id)}>Hoàn thành</Button>
                                     </div>
                                 )) : <div className="text-center py-10"><Users className="h-12 w-12 text-gray-300 mx-auto" /><p className="mt-2 text-gray-500">Hàng đợi trống</p></div>}
                             </div>
@@ -169,9 +174,9 @@ const NurseDashboard = () => {
                             <div className="bg-white rounded-2xl shadow-lg p-6">
                                 <h3 className="text-xl font-bold text-gray-900 mb-4">Nhiệm Vụ Hôm Nay</h3>
                                 <ul className="space-y-3">
-                                    <li className="flex items-center gap-3"><div className="w-5 h-5 flex items-center justify-center rounded-full bg-green-100"><CheckSquare className="h-3 w-3 text-green-600"/></div><span className="text-sm text-gray-700">Kiểm tra hàng đợi bệnh nhân</span></li>
-                                    <li className="flex items-center gap-3"><div className="w-5 h-5 flex items-center justify-center rounded-full bg-green-100"><ClipboardList className="h-3 w-3 text-green-600"/></div><span className="text-sm text-gray-700">Cập nhật trạng thái dịch vụ</span></li>
-                                    <li className="flex items-center gap-3"><div className="w-5 h-5 flex items-center justify-center rounded-full bg-yellow-100"><ListChecks className="h-3 w-3 text-yellow-600"/></div><span className="text-sm text-gray-700">Hoàn thành báo cáo ca trực</span></li>
+                                    <li className="flex items-center gap-3"><div className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100"><CheckSquare className="h-4 w-4 text-primary-600"/></div><span className="text-sm text-gray-700">Kiểm tra hàng đợi bệnh nhân</span></li>
+                                    <li className="flex items-center gap-3"><div className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100"><ClipboardList className="h-4 w-4 text-primary-600"/></div><span className="text-sm text-gray-700">Cập nhật trạng thái dịch vụ</span></li>
+                                    <li className="flex items-center gap-3"><div className="w-6 h-6 flex items-center justify-center rounded-full bg-primary-100"><ListChecks className="h-4 w-4 text-primary-600"/></div><span className="text-sm text-gray-700">Hoàn thành báo cáo ca trực</span></li>
                                 </ul>
                             </div>
                         </motion.div>

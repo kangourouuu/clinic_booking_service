@@ -41,12 +41,17 @@ type BookingQueueResponse struct {
 
 	AppointmentDate time.Time `json:"appointment"`
 	CreatedAt       time.Time `json:"created_at"`
+
+	DrugName          string `json:"drug_name"`
+	UsageInstructions string `json:"usage_instructions"`
+	Notes             string `json:"notes"`
 }
 
 func ConvertToResponse(bq *patient.BookingQueue) *BookingQueueResponse {
 	if bq == nil {
 		return nil
 	}
+
 	resp := &BookingQueueResponse{
 		QueueId:            bq.QueueId,
 		PatientId:          bq.PatientId,
@@ -60,6 +65,11 @@ func ConvertToResponse(bq *patient.BookingQueue) *BookingQueueResponse {
 		BookingStatus:      string(bq.BookingStatus),
 		AppointmentDate:    bq.AppointmentDate,
 		CreatedAt:          bq.CreatedAt,
+	}
+	if bq.DrugReceipt != nil {
+		resp.DrugName = bq.DrugReceipt.DrugName
+		resp.UsageInstructions = bq.DrugReceipt.UsageInstructions
+		resp.Notes = bq.DrugReceipt.Notes
 	}
 	return resp
 }

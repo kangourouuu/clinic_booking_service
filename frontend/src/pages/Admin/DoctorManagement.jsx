@@ -15,7 +15,7 @@ const DoctorManagement = () => {
 
     const fetchDoctors = async () => {
         try {
-            const response = await adminService.getDoctors();
+            const response = await adminService.getAllDoctors();
             setDoctors(response.data.data);
             setLoading(false);
         } catch (err) {
@@ -64,7 +64,7 @@ const DoctorManagement = () => {
                 <h2 className="text-3xl font-bold">Doctor Management</h2>
                 <button
                     onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
                 >
                     {showCreateForm ? 'Cancel' : 'Create Doctor'}
                 </button>
@@ -77,22 +77,22 @@ const DoctorManagement = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
-                                <input type="text" value={newDoctor.name} onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="text" value={newDoctor.name} onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2">Email</label>
-                                <input type="email" value={newDoctor.email} onChange={(e) => setNewDoctor({ ...newDoctor, email: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="email" value={newDoctor.email} onChange={(e) => setNewDoctor({ ...newDoctor, email: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2">Password</label>
-                                <input type="password" value={newDoctor.password} onChange={(e) => setNewDoctor({ ...newDoctor, password: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="password" value={newDoctor.password} onChange={(e) => setNewDoctor({ ...newDoctor, password: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
                                 <label className="block text-gray-700 text-sm font-bold mb-2">Phone Number</label>
-                                <input type="text" value={newDoctor.phone_number} onChange={(e) => setNewDoctor({ ...newDoctor, phone_number: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <input type="text" value={newDoctor.phone_number} onChange={(e) => setNewDoctor({ ...newDoctor, phone_number: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                         </div>
-                        <button type="submit" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Submit</button>
+                        <button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Submit</button>
                     </form>
                 </div>
             )}
@@ -100,7 +100,7 @@ const DoctorManagement = () => {
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                 <table className="min-w-full leading-normal">
                     <thead>
-                        <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <tr className="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
                             <th className="py-3 px-6 text-left">Id</th>
                             <th className="py-3 px-6 text-left">Name</th>
                             <th className="py-3 px-6 text-center">Email</th>
@@ -110,13 +110,14 @@ const DoctorManagement = () => {
                     </thead>
                     <tbody className="text-gray-600 text-sm font-light">
                         {doctors.map(doctor => (
-                            <tr key={doctor.id} className="border-b border-gray-200 hover:bg-gray-100">
+                            <tr key={doctor.id} className="border-b border-gray-200 hover:bg-gray-50">
                                 <td className="py-3 px-6 text-left whitespace-nowrap">{doctor.id}</td>
                                 <td className="py-3 px-6 text-left">{doctor.name}</td>
                                 <td className="py-3 px-6 text-center">{doctor.email}</td>
                                 <td className="py-3 px-6 text-center">{doctor.phone_number}</td>
                                 <td className="py-3 px-6 text-center">
                                     <div className="flex item-center justify-center">
+                                        <button className="w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center mr-2">E</button>
                                         <button onClick={() => handleDeleteDoctor(doctor.id)} className="w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center">D</button>
                                     </div>
                                 </td>

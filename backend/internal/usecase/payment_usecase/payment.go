@@ -119,7 +119,8 @@ func (p *paymentMethods) WebhookCheckAndSolving(event stripe.Event) (*dtoqueue.B
 		return nil, err
 	}
 
-	getAppointment := metadata["appointment"]
+	getAppointment := metadata["appointment_date"]
+	logrus.Print(getAppointment)
 	appointmentDate, err := utils.ParseTime(getAppointment)
 	if err != nil {
 		logrus.Error("Failed to parse string to time")

@@ -57,7 +57,7 @@ const ServiceManagement = () => {
                 <h2 className="text-3xl font-bold">Service Management</h2>
                 <button
                     onClick={() => setShowCreateForm(!showCreateForm)}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+                    className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300"
                 >
                     {showCreateForm ? 'Cancel' : 'Create Service'}
                 </button>
@@ -69,23 +69,23 @@ const ServiceManagement = () => {
                     <form onSubmit={handleCreateService}>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Name</label>
-                                <input type="text" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                                <input type="text" value={newService.name} onChange={(e) => setNewService({ ...newService, name: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Description</label>
-                                <input type="text" value={newService.description} onChange={(e) => setNewService({ ...newService, description: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                                <input type="text" value={newService.description} onChange={(e) => setNewService({ ...newService, description: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Price</label>
-                                <input type="number" value={newService.price} onChange={(e) => setNewService({ ...newService, price: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                                <input type="number" value={newService.price} onChange={(e) => setNewService({ ...newService, price: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                             <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">Service Category ID</label>
-                                <input type="text" value={newService.service_category_id} onChange={(e) => setNewService({ ...newService, service_category_id: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" />
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Service Category ID</label>
+                                <input type="text" value={newService.service_category_id} onChange={(e) => setNewService({ ...newService, service_category_category_id: e.target.value })} className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
                             </div>
                         </div>
-                        <button type="submit" className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Submit</button>
+                        <button type="submit" className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Submit</button>
                     </form>
                 </div>
             )}
@@ -93,7 +93,7 @@ const ServiceManagement = () => {
             <div className="bg-white shadow-lg rounded-lg overflow-hidden">
                 <table className="min-w-full leading-normal">
                     <thead>
-                        <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <tr className="bg-gray-100 text-gray-700 uppercase text-sm leading-normal">
                             <th className="py-3 px-6 text-left">Id</th>
                             <th className="py-3 px-6 text-left">Name</th>
                             <th className="py-3 px-6 text-left">Description</th>
