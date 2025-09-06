@@ -22,7 +22,7 @@ func NewPaymentHandler(rbmqUsecase messagequeue.RabbitMQUsecase, paymentUsecase 
 		paymentUsecase: paymentUsecase}
 }
 
-var webhookSecret = "whsec_69bf16774010514d064780853b0d11826c96e9833a2e06ad14395224c994700b"
+var webhookSecret = "your-webhook-secret-key"
 
 func (h *PaymentHandler) HandleWebHook(ctx *gin.Context) {
 	const MaxBodyBytes = int64(65536)
