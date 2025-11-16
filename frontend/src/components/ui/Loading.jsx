@@ -81,3 +81,4 @@ const LoadingSpinner = ({ size = 'md', className }) => {
 }
 
 export { Loading, LoadingSpinner }
+export default Loading

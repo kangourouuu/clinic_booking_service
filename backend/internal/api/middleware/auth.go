@@ -149,11 +149,41 @@ func GetPatientIdFromToken(ctx *gin.Context) (string, string, error) {
 
 func AllowCORS() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, clinic_token, Authorization, Cookie")
-		ctx.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
-		ctx.Writer.Header().Set("Access-Control-Expose-Headers", "Set-Cookie")
+		origin := ctx.Request.Header.Get("Origin")
+		
+		// List of allowed origins
+		allowedOrigins := []string{
+			"http://localhost:3000",
+			"http://localhost:5173",
+			"https://clinic-booking-service.vercel.app",
+			os.Getenv("FRONTEND_URL"), // Allow custom frontend URL from env
+		}
+		
+		// Check if origin is allowed
+		isAllowed := false
+		for _, allowed := range allowedOrigins {
+			if origin == allowed || allowed == "" {
+				continue
+			}
+			if origin == allowed {
+				isAllowed = true
+				break
+			}
+		}
+		
+		// Set CORS headers
+		if isAllowed || origin == "" {
+			if origin != "" {
+				ctx.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			} else {
+				// For local development
+				ctx.Writer.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			}
+			ctx.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			ctx.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, clinic_token, Authorization, Cookie")
+			ctx.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS, PATCH")
+			ctx.Writer.Header().Set("Access-Control-Expose-Headers", "Set-Cookie")
+		}
 
 		if ctx.Request.Method == "OPTIONS" {
 			ctx.AbortWithStatus(204)
