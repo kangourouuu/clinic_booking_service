@@ -2,6 +2,8 @@
 
 This document lists all required and optional environment variables for deploying the Clinic Booking Service.
 
+**⚠️ IMPORTANT**: These variables should be set in the deployment platform dashboards (Render for backend, Vercel for frontend), NOT in `.env` files in the repository. The `.gitignore` files are configured to exclude `.env` files for security.
+
 ## Backend Environment Variables (Render)
 
 ### Required Variables

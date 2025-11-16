@@ -125,12 +125,7 @@ db:
 ### Step 1: Prepare Configuration
 
 1. Ensure `vercel.json` is in your repository root
-2. Update `frontend/.env.production` with your backend URL:
-
-```bash
-VITE_API_BASE_URL=https://clinic-booking-backend.onrender.com/api
-VITE_APP_ENV=production
-```
+2. You'll set environment variables in the Vercel dashboard (see Step 2)
 
 ### Step 2: Deploy to Vercel
 
@@ -140,14 +135,16 @@ VITE_APP_ENV=production
 # Install Vercel CLI
 npm install -g vercel
 
-# Navigate to frontend directory
-cd frontend
+# Navigate to project root
+cd /path/to/clinic_booking_service
 
 # Deploy
 vercel --prod
 ```
 
-#### Option B: Using Vercel Dashboard
+When prompted, you'll be able to set environment variables.
+
+#### Option B: Using Vercel Dashboard (Recommended)
 
 1. Go to https://vercel.com
 2. Click "Add New Project"
@@ -157,7 +154,7 @@ vercel --prod
    - **Root Directory**: `frontend`
    - **Build Command**: `npm run build`
    - **Output Directory**: `dist`
-5. Add environment variables:
+5. Add environment variables in the dashboard:
    ```
    VITE_API_BASE_URL=https://clinic-booking-backend.onrender.com/api
    VITE_APP_ENV=production
@@ -206,7 +203,9 @@ allowedOrigins := []string{
 
 **For complete environment variable documentation, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)**
 
-### Minimal Backend Configuration (.env or Render environment)
+**⚠️ Set these in the platform dashboards, not in `.env` files**
+
+### Minimal Backend Configuration (Render Dashboard)
 
 ```bash
 # Required
@@ -215,7 +214,7 @@ PORT=9000
 GO_ENV=production
 ```
 
-### Minimal Frontend Configuration (.env.production or Vercel environment)
+### Minimal Frontend Configuration (Vercel Dashboard)
 
 ```bash
 VITE_API_BASE_URL=https://clinic-booking-backend-78t6.onrender.com/api
