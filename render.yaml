@@ -12,4 +12,8 @@ services:
         value: 9000
       - key: GO_ENV
         value: production
+      - key: REDIS_URL
+        value: redis://default:AWdmAAIncDJlYjhlNzIyMjM5OGM0NzU3YWNkOGRmYjM0Y2U3N2ZjY3AyMjY0NzA@open-moray-26470.upstash.io:6379
+      - key: RABBITMQ_URL
+        value: amqps://lucyqfxp:83DdUVqMGR-Lb_wHFs95tYK1dWhHi4jU@armadillo.rmq.cloudamqp.com/lucyqfxp
     healthCheckPath: /api/health

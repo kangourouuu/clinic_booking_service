@@ -37,12 +37,18 @@ CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 
 # Redis (Optional - for real-time WebSocket queue updates)
 # If not provided, WebSocket features will be disabled but app will still work
+# Option 1: Use full Redis URL (recommended for cloud providers like Upstash)
+REDIS_URL=redis://user:password@host:port/db
+# OR Option 2: Use individual components (legacy)
 REDIS_HOST=
 REDIS_PASSWORD=
 REDIS_DB=0
 
 # RabbitMQ (Optional - for message queue processing)
 # If not provided, message queue will be disabled but app will still work
+# Option 1: Use full RabbitMQ URL (recommended for cloud providers like CloudAMQP)
+RABBITMQ_URL=amqp://user:password@host:port/vhost
+# OR Option 2: Use individual components (legacy)
 RABBITMQ_USERNAME=
 RABBITMQ_PASSWORD=
 RABBITMQ_HOST=
@@ -141,15 +147,19 @@ STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
 
 # Redis (for real-time updates)
-REDIS_HOST=your-redis-host:6379
-REDIS_PASSWORD=your-redis-password
-REDIS_DB=0
+REDIS_URL=redis://user:password@host:port/db
+# OR use individual components:
+# REDIS_HOST=your-redis-host:6379
+# REDIS_PASSWORD=your-redis-password
+# REDIS_DB=0
 
 # RabbitMQ (for message queue)
-RABBITMQ_USERNAME=your-rabbitmq-username
-RABBITMQ_PASSWORD=your-rabbitmq-password
-RABBITMQ_HOST=your-rabbitmq-host
-RABBITMQ_PORT=5672
+RABBITMQ_URL=amqp://user:password@host:port/vhost
+# OR use individual components:
+# RABBITMQ_USERNAME=your-rabbitmq-username
+# RABBITMQ_PASSWORD=your-rabbitmq-password
+# RABBITMQ_HOST=your-rabbitmq-host
+# RABBITMQ_PORT=5672
 ```
 
 ### Frontend (Vercel)
@@ -162,13 +172,27 @@ VITE_APP_ENV=production
 
 If you want to enable Redis and RabbitMQ:
 
-1. Set up Redis and RabbitMQ services (e.g., on Railway, Redis Labs, CloudAMQP)
-2. Update `backend/config/config.production.yaml`:
+1. Set up Redis and RabbitMQ services (e.g., Upstash for Redis, CloudAMQP for RabbitMQ)
+2. Update `backend/config/config.production.yaml` to enable them:
    ```yaml
    main:
      redis: true
      rabbitmq: true
+   ```
+
+3. Set the connection URLs as environment variables in Render:
+   ```bash
+   # For Redis (Upstash or other providers)
+   REDIS_URL=redis://default:password@host:port/db
+   # Example: redis://default:AWdmAAIncDE...@open-moray-26470.upstash.io:6379
    
+   # For RabbitMQ (CloudAMQP or other providers)
+   RABBITMQ_URL=amqps://user:password@host:port/vhost
+   # Example: amqps://lucyqfxp:83DdUVqMGR...@armadillo.rmq.cloudamqp.com/lucyqfxp
+   ```
+
+4. Alternatively, you can update the config file with individual components:
+   ```yaml
    redis:
      addr: "your-redis-host:6379"
      password: "your-redis-password"
@@ -180,8 +204,11 @@ If you want to enable Redis and RabbitMQ:
      host: "your-rabbitmq-host"
      port: 5672
    ```
-3. Commit and push the changes
-4. Render will automatically redeploy
+
+**Note**: Using environment variables (REDIS_URL and RABBITMQ_URL) is recommended over hardcoding in the config file for better security and flexibility.
+
+5. Commit and push the changes
+6. Render will automatically redeploy with the new configuration
 
 ## Verifying Configuration
 

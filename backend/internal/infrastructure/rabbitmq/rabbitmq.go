@@ -39,6 +39,7 @@ type RabbitConfig struct {
 	Password string `json:"password,omitempty"`
 	Host     string `json:"host,omitempty"`
 	Port     int    `json:"port,omitempty"`
+	URL      string `json:"url,omitempty"` // Full AMQP URL (e.g., amqps://user:pass@host:port/vhost)
 }
 
 type RabbitMQClient struct {
@@ -51,15 +52,24 @@ func NewRabbitMQ(rbcfg RabbitConfig) *RabbitMQClient {
 }
 
 func (rbmq *RabbitMQClient) Connect() (*amqp.Connection, error) {
-	address := fmt.Sprintf("amqp://%s:%s@%s:%d/", rbmq.User, rbmq.Password, rbmq.Host, rbmq.Port)
+	var address string
+	
+	// If URL is provided, use it directly; otherwise build from components
+	if rbmq.URL != "" {
+		address = rbmq.URL
+		logrus.Infof("Connecting to RabbitMQ using provided URL")
+	} else {
+		address = fmt.Sprintf("amqp://%s:%s@%s:%d/", rbmq.User, rbmq.Password, rbmq.Host, rbmq.Port)
+		logrus.Infof("Connecting to RabbitMQ at %s:%d", rbmq.Host, rbmq.Port)
+	}
 
 	conn, err := amqp.Dial(address)
 	if err != nil {
-		logrus.Errorf("Failed to connect to RabbitMQ at %s:%d - %v", rbmq.Host, rbmq.Port, err)
+		logrus.Errorf("Failed to connect to RabbitMQ - %v", err)
 		return nil, fmt.Errorf("failed to connect to RabbitMQ: %w", err)
 	}
 
-	logrus.Infof("Successfully connected to RabbitMQ at %s:%d", rbmq.Host, rbmq.Port)
+	logrus.Info("Successfully connected to RabbitMQ")
 
 	rbmq.Connection = conn
 	return conn, nil

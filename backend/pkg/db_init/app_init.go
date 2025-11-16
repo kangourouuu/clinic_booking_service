@@ -6,6 +6,7 @@ import (
 	"backend/internal/infrastructure/redis"
 	"backend/pkg/config"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -45,7 +46,11 @@ func InitRedis() (*redis.RedisClient, error) {
 		logrus.Errorf("Redis is not enable")
 	}
 
+	// Check for REDIS_URL environment variable first
+	redisURL := os.Getenv("REDIS_URL")
+	
 	redisCfg := redis.RedisConfig{
+		URL:          redisURL,
 		Address:      viper.GetString("redis.addr"),
 		Password:     viper.GetString("redis.password"),
 		DB:           viper.GetInt("redis.db"),
@@ -70,14 +75,22 @@ func InitRabbitMQ() (*rabbitmq.RabbitMQClient, error) {
 		return nil, fmt.Errorf("RabbitMQ is disabled in config")
 	}
 
+	// Check for RABBITMQ_URL environment variable first
+	rabbitmqURL := os.Getenv("RABBITMQ_URL")
+	
 	rabbitmqCfg := &rabbitmq.RabbitConfig{
+		URL:      rabbitmqURL,
 		User:     viper.GetString("rabbitmq.username"),
 		Password: viper.GetString("rabbitmq.password"),
 		Host:     viper.GetString("rabbitmq.host"),
 		Port:     viper.GetInt("rabbitmq.port"),
 	}
 
-	logrus.Infof("Connecting to RabbitMQ at %s: %d", rabbitmqCfg.Host, rabbitmqCfg.Port)
+	if rabbitmqURL != "" {
+		logrus.Info("Connecting to RabbitMQ using RABBITMQ_URL environment variable")
+	} else {
+		logrus.Infof("Connecting to RabbitMQ at %s:%d", rabbitmqCfg.Host, rabbitmqCfg.Port)
+	}
 
 	rabbitmqClient := rabbitmq.NewRabbitMQ(*rabbitmqCfg)
 	if rabbitmqClient == nil {
