@@ -32,6 +32,7 @@ type DatabaseConfig struct {
 	Username     string
 	Password     string
 	DB           string
+	SSLMode      string
 	PoolSize     int
 	Timeout      time.Duration
 	DialTimeout  time.Duration
@@ -58,8 +59,12 @@ func (c *BunDatabaseClient) Connect() error {
 	case MYSQL:
 		return nil
 	case POSTGRES:
-		dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
-			c.Username, c.Password, c.Host, c.Port, c.DB)
+		sslMode := c.SSLMode
+		if sslMode == "" {
+			sslMode = "disable"
+		}
+		dsn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+			c.Username, c.Password, c.Host, c.Port, c.DB, sslMode)
 		pgconn := pgdriver.NewConnector(
 			pgdriver.WithDSN(dsn),
 			pgdriver.WithTimeout(c.Timeout),

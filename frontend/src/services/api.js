@@ -1,9 +1,10 @@
 import axios from 'axios'
 import toast from 'react-hot-toast'
 
-// Use relative path in development to leverage Vite proxy
-// Vite will proxy /api requests to http://localhost:9000
-const API_BASE_URL = '/api'
+// Use environment variable for API base URL
+// In development with Docker, use proxy to /api
+// In production, use full URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // Create axios instance
 const api = axios.create({
