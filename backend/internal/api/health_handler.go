@@ -77,9 +77,10 @@ func (h *HealthHandler) HealthCheck(ctx *gin.Context) {
 	healthStatus.Services["rabbitmq"] = rabbitMQStatus
 
 	// Return 200 OK even if some optional services are down
-	// Only return non-200 if critical services (database) are down
+	// Only return non-200 if critical services (database) are actively unhealthy
+	// Return 200 if database is not configured (during startup/initialization)
 	statusCode := http.StatusOK
-	if dbStatus == "unhealthy" || dbStatus == "not_configured" {
+	if dbStatus == "unhealthy" {
 		statusCode = http.StatusServiceUnavailable
 		healthStatus.Status = "unhealthy"
 	}

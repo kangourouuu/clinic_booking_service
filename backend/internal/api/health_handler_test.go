@@ -25,8 +25,8 @@ func TestHealthCheck(t *testing.T) {
 
 		handler.HealthCheck(c)
 
-		// Since database is not configured in test, expect 503
-		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+		// Since database is not configured in test, expect 200 (not considered unhealthy)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response HealthCheckResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
@@ -55,8 +55,8 @@ func TestHealthCheck(t *testing.T) {
 
 		handler.HealthCheck(c)
 
-		// Should return 503 since database is not configured
-		assert.Equal(t, http.StatusServiceUnavailable, w.Code)
+		// Should return 200 OK even when database is not configured (startup scenario)
+		assert.Equal(t, http.StatusOK, w.Code)
 
 		var response HealthCheckResponse
 		err := json.Unmarshal(w.Body.Bytes(), &response)
