@@ -52,10 +52,15 @@ func (h *PaymentHandler) HandleWebHook(ctx *gin.Context) {
 			return 
 		}
 
-		err = h.rbmqUsecase.PublishBooking(ctx, bookingQueuePublish)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Failed to publish booking queue"))
-			return
+		// Only publish to RabbitMQ if it's available
+		if h.rbmqUsecase != nil {
+			err = h.rbmqUsecase.PublishBooking(ctx, bookingQueuePublish)
+			if err != nil {
+				logrus.Warnf("Failed to publish booking queue to RabbitMQ: %v", err)
+				// Don't return error - payment was successful, just log the warning
+			}
+		} else {
+			logrus.Warn("RabbitMQ not available, skipping booking queue publish")
 		}
 	}
 

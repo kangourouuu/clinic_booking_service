@@ -117,14 +117,14 @@ func (s *patientUsecase) LoginPatient(ctx context.Context, req *dto.LoginRequest
 	token := utils.GenerateToken(p.PatientId.String(), "patient")
 
 	// Cache token in Redis if redis connection is available
-	// if s.redis != nil {
-	err = s.redis.Set(context.Background(), "patientId", token, 20*time.Minute)
-	if err != nil {
-		logrus.Warnf("failed to cache patient information: %s", err)
+	if s.redis.Client != nil {
+		err = s.redis.Set(context.Background(), "patientId", token, 20*time.Minute)
+		if err != nil {
+			logrus.Warnf("failed to cache patient information: %s", err)
+		}
+	} else {
+		logrus.Debug("Redis connection not available, skipping token caching")
 	}
-	// } else {
-	// 	logrus.Warn("Redis connection not available, skipping token caching")
-	// }
 
 	// return response
 	resp := &dto.LoginResponse{
