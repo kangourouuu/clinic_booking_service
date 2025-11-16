@@ -52,9 +52,12 @@ func init() {
 
 	client, err := dbinit.InitRabbitMQ()
 	if err != nil {
-		logrus.Fatal(err)
+		logrus.Warn("RabbitMQ initialization skipped: ", err)
+		rabbitMQClient = nil
+	} else {
+		rabbitMQClient = client
+		logrus.Info("RabbitMQ connected successfully")
 	}
-	rabbitMQClient = client
 
 	e, err := casbinusage.InitCasbin()
 	if err != nil {
@@ -68,18 +71,25 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	msgUsecase := messagequeue.NewRabbitMQUsecase(rabbitMQClient, persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB()), *redisClient)
+	// Only create message usecase if RabbitMQ is available
+	var msgUsecase messagequeue.RabbitMQUsecase
+	if rabbitMQClient != nil && redisClient != nil {
+		msgUsecase = messagequeue.NewRabbitMQUsecase(rabbitMQClient, persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB()), *redisClient)
+		go func() {
+			err := msgUsecase.StartBookingConsumer(ctx)
+			if err != nil {
+				logrus.Error("Failed to start consumer:", err)
+				// Don't cancel context, just log the error
+			}
+		}()
+	} else {
+		logrus.Warn("RabbitMQ or Redis not available, message queue functionality will be disabled")
+	}
+
 	engine := server.NewEngine()
 
 	apiRoutes := engine.Group("/api")
 	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient)
-	go func() {
-		err := msgUsecase.StartBookingConsumer(ctx)
-		if err != nil {
-			logrus.Error("Failed to start consumer:", err)
-			cancel() // Cancel context on error
-		}
-	}()
 
 	server := server.New(config.AppConfig.Main.Port, engine)
 	if err := server.Run(); err != nil {

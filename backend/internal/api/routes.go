@@ -34,10 +34,19 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 	messageQueueRepo := persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB())
 	messageQueueUsecase := serviceusecase.NewBookingQueueUsecase(messageQueueRepo)
 
+	// Create a default RedisClient if nil (to avoid panics)
+	var redisClient redis.RedisClient
+	if rc != nil {
+		redisClient = *rc
+	} else {
+		// Use empty RedisClient struct - handlers should check if Client field is nil
+		redisClient = redis.RedisClient{}
+	}
+
 	// nurse & message_queue
 	nurseRepo := nurserepository.NewNurseRepo(db.DatabaseClient.GetDB())
 	nurseService := nurseUsecase.NewNurseService(nurseRepo)
-	nurseHandler := nurseHandler.NewNurseHandler(nurseService, messageQueueUsecase, *rc)
+	nurseHandler := nurseHandler.NewNurseHandler(nurseService, messageQueueUsecase, redisClient)
 
 	// doctor
 	doctorRepo := doctorrepository.NewDoctorRepo(db.DatabaseClient.GetDB())
@@ -66,7 +75,7 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 	avatarUploader := cloudinaryutils.NewAvatarUploader()
 	// patient
 	patientRepo := patientrepository.NewPatientRepo(db.DatabaseClient.GetDB())
-	patientService := patientUsecase.NewPatientService(patientRepo, *rc, avatarUploader)
+	patientService := patientUsecase.NewPatientService(patientRepo, redisClient, avatarUploader)
 	patientHandler := patientHandler.NewPatientHandler(patientService, serviceUsecase, messageQueueUsecase, paymentUsecase)
 
 	adminRepository := staffrepository.NewAdminRepository(db.DatabaseClient.GetDB())

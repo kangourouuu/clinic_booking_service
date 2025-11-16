@@ -175,6 +175,12 @@ func (cws *ClientWS) writeMsg() {
 
 func (h *NurseHandler) GetAllBookingQueues(ctx *gin.Context) {
 
+	// Check if Redis is available for WebSocket support
+	if h.redis.Client == nil {
+		ctx.JSON(http.StatusServiceUnavailable, errorsresponse.NewCustomErrResponse(http.StatusServiceUnavailable, "Real-time queue updates are not available. Redis is not configured."))
+		return
+	}
+
 	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		log.Println(err)
@@ -353,11 +359,13 @@ func (h *NurseHandler) MarkCompleteQueue(ctx *gin.Context) {
 		return
 	}
 
-	err := h.redis.HDel(ctx, "queue", queueIdStr)
-	if err != nil {
-		logrus.Error(err)
-		ctx.JSON(http.StatusInternalServerError, errorsresponse.NewCustomErrResponse(http.StatusInternalServerError, "Error has occur when mark complete this patient"))
-		return
+	// Only delete from Redis if it's available
+	if h.redis.Client != nil {
+		err := h.redis.HDel(ctx, "queue", queueIdStr)
+		if err != nil {
+			logrus.Warnf("Failed to delete from Redis cache: %v", err)
+			// Continue anyway - the database update is more important
+		}
 	}
 
 	queueId, err := strconv.Atoi(queueIdStr)
