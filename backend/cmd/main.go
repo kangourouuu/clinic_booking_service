@@ -14,6 +14,7 @@ import (
 	"context"
 
 	"github.com/casbin/casbin/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 )
@@ -88,8 +89,16 @@ func main() {
 
 	engine := server.NewEngine()
 
+	// Add a simple root handler for health checks
+	engine.GET("/", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "message": "Clinic Booking Service API"})
+	})
+	engine.HEAD("/", func(c *gin.Context) {
+		c.Status(200)
+	})
+
 	apiRoutes := engine.Group("/api")
-	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient)
+	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient, rabbitMQClient)
 
 	server := server.New(config.AppConfig.Main.Port, engine)
 	if err := server.Run(); err != nil {
