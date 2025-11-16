@@ -89,7 +89,7 @@ func main() {
 	engine := server.NewEngine()
 
 	apiRoutes := engine.Group("/api")
-	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient)
+	api.SetupRoutes(apiRoutes, enforcer, msgUsecase, redisClient, rabbitMQClient)
 
 	server := server.New(config.AppConfig.Main.Port, engine)
 	if err := server.Run(); err != nil {

@@ -16,6 +16,7 @@ import (
 	staffrepository "backend/internal/infrastructure/persistence/staff_repository"
 	doctorrepository "backend/internal/infrastructure/persistence/staff_repository/doctor_repository"
 	nurserepository "backend/internal/infrastructure/persistence/staff_repository/nurse_repository"
+	"backend/internal/infrastructure/rabbitmq"
 	"backend/internal/infrastructure/redis"
 	doctorusecase "backend/internal/usecase/doctor-usecase"
 	messagequeue "backend/internal/usecase/message_queue"
@@ -29,7 +30,7 @@ import (
 )
 
 // localhost:9000/api
-func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeue.RabbitMQUsecase, rc *redis.RedisClient) {
+func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeue.RabbitMQUsecase, rc *redis.RedisClient, rabbitMQClient *rabbitmq.RabbitMQClient) {
 	drugRecepitRepository := doctorrepository.NewDrugReceiptRepository(db.DatabaseClient.GetDB())
 	messageQueueRepo := persistence.NewBookingQueueRepository(db.DatabaseClient.GetDB())
 	messageQueueUsecase := serviceusecase.NewBookingQueueUsecase(messageQueueRepo)
@@ -81,6 +82,10 @@ func SetupRoutes(r *gin.RouterGroup, e *casbin.Enforcer, rbmqUsecase messagequeu
 	adminRepository := staffrepository.NewAdminRepository(db.DatabaseClient.GetDB())
 	adminUsecase := usecase.NewAdminUsecase(adminRepository)
 	adminHandler := NewAdminHandler(adminUsecase)
+
+	// health check handler
+	healthHandler := NewHealthHandler(rc, rabbitMQClient)
+	r.GET("/health", healthHandler.HealthCheck)
 
 	r.POST("/login/patient", patientHandler.LoginPatient)
 	r.POST("/login/nurse", nurseHandler.LoginNurse)
