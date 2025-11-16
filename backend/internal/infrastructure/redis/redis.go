@@ -36,6 +36,7 @@ type RedisConfig struct {
 	DialTimeout  time.Duration
 	ReadTimeout  time.Duration
 	WriteTimeout time.Duration
+	URL          string // Full Redis URL (e.g., redis://user:pass@host:port/db or rediss:// for TLS)
 }
 
 type RedisClient struct {
@@ -44,16 +45,45 @@ type RedisClient struct {
 }
 
 func NewRedisClient(config RedisConfig) (*RedisClient, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr:         config.Address,
-		Password:     config.Password,
-		DB:           config.DB,
-		PoolSize:     config.Poolsize,
-		MinIdleConns: config.MinIdleConn,
-		DialTimeout:  config.DialTimeout,
-		ReadTimeout:  config.ReadTimeout,
-		WriteTimeout: config.WriteTimeout,
-	})
+	var client *redis.Client
+	
+	// If URL is provided, use ParseURL; otherwise use individual options
+	if config.URL != "" {
+		opts, err := redis.ParseURL(config.URL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse redis URL: %s", err)
+		}
+		// Override with additional config if provided
+		if config.Poolsize > 0 {
+			opts.PoolSize = config.Poolsize
+		}
+		if config.MinIdleConn > 0 {
+			opts.MinIdleConns = config.MinIdleConn
+		}
+		if config.DialTimeout > 0 {
+			opts.DialTimeout = config.DialTimeout
+		}
+		if config.ReadTimeout > 0 {
+			opts.ReadTimeout = config.ReadTimeout
+		}
+		if config.WriteTimeout > 0 {
+			opts.WriteTimeout = config.WriteTimeout
+		}
+		client = redis.NewClient(opts)
+		logrus.Info("Connecting to Redis using provided URL")
+	} else {
+		client = redis.NewClient(&redis.Options{
+			Addr:         config.Address,
+			Password:     config.Password,
+			DB:           config.DB,
+			PoolSize:     config.Poolsize,
+			MinIdleConns: config.MinIdleConn,
+			DialTimeout:  config.DialTimeout,
+			ReadTimeout:  config.ReadTimeout,
+			WriteTimeout: config.WriteTimeout,
+		})
+		logrus.Infof("Connecting to Redis at %s", config.Address)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

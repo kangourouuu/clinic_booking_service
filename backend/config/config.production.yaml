@@ -3,8 +3,8 @@ main:
   log_type: "console"
   log_file: "logs/app.log"
   database: true
-  redis: false
-  rabbitmq: false
+  redis: true
+  rabbitmq: true
 
 db:
   host: "ep-round-mountain-a1dg7qjn-pooler.ap-southeast-1.aws.neon.tech"
