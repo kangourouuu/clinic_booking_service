@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: clinic-booking-backend
+    runtime: go
+    plan: free
+    buildCommand: cd backend && go build -o main cmd/main.go
+    startCommand: cd backend && ./main
+    envVars:
+      - key: CONFIG_DIR
+        value: config/config.production.yaml
+      - key: PORT
+        value: 9000
+      - key: GO_ENV
+        value: production
+    healthCheckPath: /api/health

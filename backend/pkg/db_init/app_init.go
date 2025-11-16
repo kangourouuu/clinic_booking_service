@@ -27,6 +27,7 @@ func InitDatabase() error {
 		Username:     viper.GetString("db.username"),
 		Password:     viper.GetString("db.password"),
 		DB:           viper.GetString("db.database"),
+		SSLMode:      viper.GetString("db.sslmode"),
 		PoolSize:     20,
 		Timeout:      30 * time.Second,
 		DialTimeout:  30 * time.Second,

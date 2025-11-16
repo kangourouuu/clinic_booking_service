@@ -1,0 +1,26 @@
+main:
+  port: "9000"
+  log_type: "console"
+  log_file: "logs/app.log"
+  database: true
+  redis: false
+  rabbitmq: false
+
+db:
+  host: "ep-round-mountain-a1dg7qjn-pooler.ap-southeast-1.aws.neon.tech"
+  port: 5432
+  username: "neondb_owner"
+  password: "npg_jxang6CcbuV8"
+  database: "clinic_booking"
+  sslmode: "require"
+
+redis:
+  addr: ""
+  password: ""
+  db: 0
+
+rabbitmq:
+  username: ""
+  password: ""
+  host: ""
+  port: 5672

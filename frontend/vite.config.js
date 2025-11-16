@@ -20,6 +20,33 @@ export default defineConfig({
     },
     build: {
         outDir: 'dist',
-        sourcemap: true
-    }
+        sourcemap: true,
+        // Optimize chunk splitting
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Split vendor chunks
+                    'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+                    'query-vendor': ['@tanstack/react-query', '@tanstack/react-query-devtools'],
+                    'ui-vendor': ['lucide-react', 'framer-motion', 'clsx'],
+                    'form-vendor': ['react-hook-form', 'axios'],
+                },
+            },
+        },
+        // Increase chunk size warning limit
+        chunkSizeWarningLimit: 1000,
+        // Use esbuild for minification (faster and no extra dependencies)
+        minify: 'esbuild',
+    },
+    // Optimize dependencies
+    optimizeDeps: {
+        include: [
+            'react',
+            'react-dom',
+            'react-router-dom',
+            '@tanstack/react-query',
+            'axios',
+            'lucide-react',
+        ],
+    },
 })

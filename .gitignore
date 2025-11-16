@@ -3,3 +3,8 @@
 node_modules
 dist
 pgdata
+
+# Build artifacts
+backend/main
+backend/tmp
+frontend/dist

@@ -1,18 +1,28 @@
 import React from 'react'
 import { cn } from '../../utils/helpers'
 
-const Card = React.forwardRef(({ className, children, ...props }, ref) => (
-    <div
-        ref={ref}
-        className={cn(
-            'bg-white rounded-xl shadow-sm border border-gray-200',
-            className
-        )}
-        {...props}
-    >
-        {children}
-    </div>
-))
+const Card = React.forwardRef(({ className, variant = 'default', children, ...props }, ref) => {
+    const variants = {
+        default: 'bg-white shadow-soft border border-gray-100',
+        medical: 'bg-gradient-to-br from-white to-blue-50/50 shadow-medical border border-primary-100',
+        hover: 'bg-white shadow-soft border border-gray-100 hover:shadow-soft-lg hover:-translate-y-1 cursor-pointer transition-all duration-300',
+        glass: 'glass-medical',
+    }
+
+    return (
+        <div
+            ref={ref}
+            className={cn(
+                'rounded-medical-lg transition-all duration-300',
+                variants[variant],
+                className
+            )}
+            {...props}
+        >
+            {children}
+        </div>
+    )
+})
 
 const CardHeader = React.forwardRef(({ className, children, ...props }, ref) => (
     <div
@@ -28,7 +38,7 @@ const CardTitle = React.forwardRef(({ className, children, ...props }, ref) => (
     <h3
         ref={ref}
         className={cn(
-            'text-lg font-semibold leading-none tracking-tight text-gray-900',
+            'text-xl font-semibold leading-none tracking-tight text-gray-900 font-medical',
             className
         )}
         {...props}
@@ -40,7 +50,7 @@ const CardTitle = React.forwardRef(({ className, children, ...props }, ref) => (
 const CardDescription = React.forwardRef(({ className, children, ...props }, ref) => (
     <p
         ref={ref}
-        className={cn('text-sm text-gray-600 mt-1', className)}
+        className={cn('text-sm text-gray-600 mt-2', className)}
         {...props}
     >
         {children}
