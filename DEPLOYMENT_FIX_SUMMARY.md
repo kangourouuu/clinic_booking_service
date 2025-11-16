@@ -5,16 +5,26 @@ The application was failing to deploy on Render because:
 1. RabbitMQ was disabled in the config (`main.rabbitmq: false`)
 2. The code called `logrus.Fatal()` when RabbitMQ couldn't connect, causing the app to crash
 3. Frontend didn't have the backend URL configured
+4. **Health check endpoint `/api/health` was missing**, causing 404 errors and deployment failures
 
 ## Solution
-Made RabbitMQ and Redis truly optional in the application:
+Made RabbitMQ and Redis truly optional in the application and added health check endpoint:
 
 ### Backend Changes
-1. **cmd/main.go**: Changed RabbitMQ initialization from Fatal to Warning when disabled
-2. **api/routes.go**: Safe handling of nil Redis client
-3. **payment_handler/payment.go**: Skip RabbitMQ publish if not available
-4. **nurse-handler/nurse_handler.go**: Check Redis availability before WebSocket operations
-5. **patient-usecase/patient_usecase.go**: Skip Redis caching if not available
+1. **cmd/main.go**: 
+   - Changed RabbitMQ initialization from Fatal to Warning when disabled
+   - Added root endpoint handlers for GET and HEAD requests (fixes 404 on `/`)
+   - Added gin import
+2. **api/routes.go**: 
+   - Safe handling of nil Redis client
+   - Added health check route at `/api/health` (no authentication required)
+3. **api/health_handler.go**: New handler that checks:
+   - Database (critical - returns 503 only if actively unhealthy)
+   - Redis (optional - gracefully degrades if unavailable)
+   - RabbitMQ (optional - gracefully degrades if unavailable)
+4. **payment_handler/payment.go**: Skip RabbitMQ publish if not available
+5. **nurse-handler/nurse_handler.go**: Check Redis availability before WebSocket operations
+6. **patient-usecase/patient_usecase.go**: Skip Redis caching if not available
 
 ### Documentation
 1. Created `ENVIRONMENT_VARIABLES.md` with comprehensive guide
@@ -44,15 +54,38 @@ With just the minimum configuration:
 - ✅ View services and categories
 - ✅ Book services
 - ✅ Patient/Doctor/Nurse dashboards
+- ✅ Health check endpoint for deployment monitoring
 - ❌ Real-time WebSocket updates (needs Redis)
 - ❌ Async message queue (needs RabbitMQ)
 - ❌ Payment processing (needs Stripe keys)
 - ❌ Image uploads (needs Cloudinary)
 
+## Health Check Endpoint
+
+The application now includes a health check endpoint at `/api/health` that:
+- Returns JSON with status and individual service health
+- Returns 200 OK when database is healthy or not yet configured (startup scenario)
+- Returns 503 Service Unavailable only when database is actively unhealthy
+- Monitors optional services (Redis, RabbitMQ) without affecting overall health status
+
+Example response:
+```json
+{
+  "status": "healthy",
+  "services": {
+    "database": "healthy",
+    "redis": "not_configured",
+    "rabbitmq": "not_configured"
+  }
+}
+```
+
 ## Testing
 - ✅ Backend builds successfully (32MB binary)
 - ✅ No CodeQL security alerts
 - ✅ All code changes compile without errors
+- ✅ Health check endpoint tests pass
+- ✅ All existing unit tests continue to pass
 
 ## Next Steps for Deployment
 
