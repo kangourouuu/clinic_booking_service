@@ -2,6 +2,27 @@
 
 This guide provides step-by-step instructions for deploying the Clinic Booking Service to production.
 
+## Current Production URLs
+
+- **Frontend**: https://clinic-booking-service.vercel.app
+- **Backend**: https://clinic-booking-backend-78t6.onrender.com
+- **Database**: PostgreSQL on Neon (ep-round-mountain-a1dg7qjn-pooler.ap-southeast-1.aws.neon.tech)
+
+## Quick Start
+
+For detailed environment variable configuration, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md).
+
+**Minimum required environment variables:**
+
+### Backend (Render)
+- `CONFIG_DIR=config/config.production.yaml`
+- `PORT=9000`
+- `GO_ENV=production`
+
+### Frontend (Vercel)
+- `VITE_API_BASE_URL=https://clinic-booking-backend-78t6.onrender.com/api`
+- `VITE_APP_ENV=production`
+
 ## Architecture Overview
 
 - **Frontend**: React SPA hosted on Vercel
@@ -15,8 +36,8 @@ This guide provides step-by-step instructions for deploying the Clinic Booking S
    - [Vercel Account](https://vercel.com) for frontend hosting
    - [Render Account](https://render.com) for backend hosting
    - [Neon Account](https://neon.tech) for PostgreSQL database
-   - Stripe account for payments
-   - Cloudinary account for image uploads
+   - Stripe account for payments (optional)
+   - Cloudinary account for image uploads (optional)
 
 2. **Tools**:
    - Git
@@ -183,19 +204,32 @@ allowedOrigins := []string{
 
 ## Environment Variables Reference
 
-### Backend (.env)
+**For complete environment variable documentation, see [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md)**
+
+### Minimal Backend Configuration (.env or Render environment)
 
 ```bash
-# Server
-PORT=9000
+# Required
 CONFIG_DIR=config/config.production.yaml
+PORT=9000
 GO_ENV=production
+```
 
+### Minimal Frontend Configuration (.env.production or Vercel environment)
+
+```bash
+VITE_API_BASE_URL=https://clinic-booking-backend-78t6.onrender.com/api
+VITE_APP_ENV=production
+```
+
+### Optional Backend Variables (for full features)
+
+```bash
 # Security
 SECRET_KEY=your-secret-key-here
 
 # CORS
-FRONTEND_URL=https://your-frontend-url.vercel.app
+FRONTEND_URL=https://clinic-booking-service.vercel.app
 
 # Payment
 STRIPE_SECRET_KEY=sk_live_xxx
@@ -204,18 +238,22 @@ STRIPE_WEBHOOK_SECRET=whsec_xxx
 # Image Upload
 CLOUDINARY_URL=cloudinary://xxx:xxx@xxx
 
-# Optional Services
-REDIS_HOST=
-REDIS_PASSWORD=
-RABBITMQ_URL=
+# Redis (for real-time WebSocket features)
+REDIS_HOST=your-redis-host:6379
+REDIS_PASSWORD=your-redis-password
+
+# RabbitMQ (for message queue processing)
+RABBITMQ_USERNAME=your-username
+RABBITMQ_PASSWORD=your-password
+RABBITMQ_HOST=your-host
+RABBITMQ_PORT=5672
 ```
 
-### Frontend (.env.production)
+**Note**: The application works without Redis and RabbitMQ. They are only needed for:
+- Redis: Real-time WebSocket queue updates for nurses/doctors
+- RabbitMQ: Asynchronous message queue processing for bookings
 
-```bash
-VITE_API_BASE_URL=https://clinic-booking-backend.onrender.com/api
-VITE_APP_ENV=production
-```
+See [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for detailed explanation of each variable.
 
 ## Troubleshooting
 
