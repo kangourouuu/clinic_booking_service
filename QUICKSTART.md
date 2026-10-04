@@ -100,23 +100,24 @@ If using Neon (cloud):
 2. Create a new project
 3. Update `config/config.yaml` with Neon credentials
 
-## 🐳 Docker Setup (Alternative - Even Faster!)
+## 🐳 Docker Microservices Setup (Recommended)
 
 ### One-Command Start
 
 ```bash
-# Start everything with Docker Compose
-docker-compose up --build
+# Start all microservices and infrastructure
+docker compose -f docker-compose.microservices.yml up --build
 
-# Backend → http://localhost:9000
-# Frontend → http://localhost:3000
-# PostgreSQL → localhost:5432
-# Redis → localhost:6379
-# RabbitMQ → localhost:5672
-# RabbitMQ UI → http://localhost:15672
+# API Gateway & Web UI → http://localhost:8080
+# Frontend Dev Server  → http://localhost:3000
+# Public Queue Board   → http://localhost:8080/queue-board
+# RabbitMQ UI          → http://localhost:15672 (guest / guest)
+# PostgreSQL           → localhost:5432
+# Redis                → localhost:6379
 ```
 
-That's it! Everything is configured and running.
+That's it! The pure Go API Gateway, 5 domain services (auth, catalog, booking, payment, medical), PostgreSQL, Redis, and RabbitMQ are configured and running.
+
 
 ## 🎮 Testing the Application
 

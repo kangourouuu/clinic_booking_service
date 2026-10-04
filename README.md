@@ -1,117 +1,218 @@
-# Clinic Booking Service
+# Clinic Booking & Healthcare Management Platform
 
-A full-stack clinic booking and management system. Patients book services and pay online; nurses and doctors see their queues update in real time without refreshing.
-
-Go (Gin) backend with clean architecture, React frontend, and an event pipeline built on RabbitMQ, Redis pub/sub, and WebSocket.
+A production-ready, event-driven Golang microservices platform for modern outpatient clinic operations. Features an automated patient booking pipeline, Stripe checkout with 4-tier idempotency, high-concurrency race condition prevention, a pure Golang API Gateway, real-time WebSocket waiting room queue boards, and a digital clinical consultation & printable prescription generator.
 
 ---
 
-## Why it's built this way
-
-Booking is the interesting part. A patient completing a Stripe payment shouldn't wait on queue bookkeeping, and every nurse watching the dashboard should see the new patient appear immediately. Those are two different problems, so they use two different tools:
-
-- **RabbitMQ** decouples booking ingestion from the HTTP request. The payment callback publishes an event and returns; a consumer persists the booking on its own time.
-- **Redis** serves double duty — it caches the current queue, and its pub/sub channel fans a single "queue changed" signal out to every connected dashboard.
-- **WebSocket** pushes the refreshed queue to each client. Clients never poll.
+## Architecture Overview
 
 ```mermaid
-flowchart LR
-    P[Patient] --> L[Login → JWT]
-    L --> A{Authenticated?}
-    A -->|no| E401[401 Unauthorized]
-    A -->|yes| C{Casbin<br/>role check}
-    C -->|no| E403[403 Forbidden]
-    C -->|yes| S[Register service]
-    S --> ST[Stripe payment]
-    ST --> DONE{Completed?}
-    DONE -->|no| CX{Cancelled<br/>by user?}
-    CX -->|yes| BACK[Redirect to services]
-    CX -->|no| E422[422 Unprocessable Entity]
-    DONE -->|yes| PUB[Publish booking event]
+flowchart TD
+    Client["Clients (Browser / Mobile / TV Display)"]
+    
+    subgraph Ingress ["Public Ingress Point"]
+        GW["API Gateway (:8080)<br/>• Pure Golang Reverse Proxy (httputil)<br/>• Centralized JWT & RBAC Extraction<br/>• X-Request-ID & X-User Headers<br/>• React SPA Static Asset Server"]
+    end
+
+    subgraph Microservices ["Domain Microservices (Private Network)"]
+        AuthSvc["Auth Service (:9001)<br/>Patient / Staff Auth & Profiles"]
+        CatalogSvc["Catalog Service (:9002)<br/>Services, Categories & Pricing"]
+        BookingSvc["Booking Service (:9003)<br/>Appointments, Slots, Live Queue & WS Hub"]
+        PaymentSvc["Payment Service (:9004)<br/>Stripe Checkout, Webhooks & Automated Refunds"]
+        MedicalSvc["Medical Service (:9005)<br/>EMR Vitals, Diagnoses & Digital Prescriptions"]
+    end
+
+    subgraph Messaging ["Message Queue & Event Bus"]
+        RMQ["RabbitMQ 3<br/>booking_exchange (direct)<br/>booking_queue & booking_dlq (DLX)"]
+    end
+
+    subgraph StateAndCache ["Persistence & Caching"]
+        PG[("PostgreSQL 16 (Bun ORM)<br/>Partial Unique Indexes<br/>processed_webhook_events")]
+        RDS[("Redis 7<br/>SETNX Distributed Lock<br/>Pub/Sub queue:update")]
+    end
+
+    Client -->|HTTP / WebSocket / SPA| GW
+    GW -->|/api/v1/auth, /api/v1/users| AuthSvc
+    GW -->|/api/v1/services, /api/v1/categories| CatalogSvc
+    GW -->|/api/v1/bookings, /api/v1/queues, /ws| BookingSvc
+    GW -->|/api/v1/payments| PaymentSvc
+    GW -->|/api/v1/medical, /api/v1/prescriptions| MedicalSvc
+
+    AuthSvc --> PG
+    AuthSvc --> RDS
+    CatalogSvc --> PG
+    MedicalSvc --> PG
+
+    BookingSvc --> PG
+    BookingSvc --> RDS
+    BookingSvc --> RMQ
+
+    PaymentSvc --> PG
+    PaymentSvc --> RMQ
+
+    PaymentSvc -.->|Publish booking event| RMQ
+    RMQ -.->|Manual Ack / DLQ on error| BookingSvc
+    BookingSvc -.->|Pub/Sub queue:update| RDS
+    RDS -.->|Broadcast update| BookingSvc
 ```
-
-Once the payment clears, the booking leaves the request path entirely:
-
-```mermaid
-flowchart LR
-    PUB[Producer] --> EX[booking_exchange<br/>direct]
-    EX -->|service.register| Q[booking_queue]
-    Q --> CON[Consumer]
-    CON --> PG[(PostgreSQL)]
-    CON --> RC[(Redis<br/>hash + cache)]
-    RC --> RP[PUBLISH queue:update]
-    RP --> SUB[Subscriber]
-    SUB --> WS[WebSocket]
-    WS --> ND[Nurse dashboard]
-    WS --> DD[Doctor dashboard]
-```
-
-A fuller diagram covering every auth branch and both dashboard flows is in [`clinic_booking.excalidraw`](./clinic_booking.excalidraw) — open it at [excalidraw.com](https://excalidraw.com).
 
 ---
 
-## Stack
+## Key Reliability & Concurrency Solutions
 
-| Layer | Choice |
-|---|---|
-| Backend | Go 1.23, Gin |
-| Database | PostgreSQL 16 via Bun |
-| Cache & pub/sub | Redis 7 |
-| Message broker | RabbitMQ 3 |
-| Auth | JWT + Casbin RBAC (admin / doctor / nurse / patient) |
-| Payments | Stripe |
-| Media | Cloudinary |
-| Frontend | React, Vite, Tailwind |
-| Deploy | Docker Compose; Render (API) + Vercel (web) |
+### 1. Pure Golang API Gateway (Zero Nginx Dependency)
+- Implemented in `backend/cmd/gateway-service/main.go` using standard library `net/http/httputil.ReverseProxy`.
+- Serves both dynamic REST/WebSocket API endpoints and the React SPA with HTML5 client-side routing fallback.
+- Validates JWT tokens centrally, extracts patient/staff identities, and injects authenticated headers (`X-User-ID`, `X-User-Role`, `X-User-Email`) downstream to microservices.
+- Provides unified distributed request tracing via `X-Request-ID`.
+
+### 2. Elimination of Check-Then-Act Race Conditions
+When multiple users attempt to book the exact same doctor and time slot simultaneously:
+- **Application Tier**: A Redis distributed lock (`SETNX lock:doctor:{id}:{date}:{slot} {token} EX 15`) is acquired prior to slot checking.
+- **Database Tier**: Protected by a PostgreSQL partial unique index:
+  ```sql
+  CREATE UNIQUE INDEX idx_unique_doctor_active_slot 
+  ON bookings (doctor_id, booking_date, time_slot) 
+  WHERE booking_status IN ('waiting for payment', 'pending payment', 'in progress', 'waiting');
+  ```
+- Any concurrent collision returns HTTP `409 Conflict` gracefully rather than creating duplicate appointments or inconsistent state.
+
+### 3. Stripe Webhook Idempotency & Network Delay Protection
+To address network timeouts, multiple browser checkout clicks, and out-of-order webhook delivery:
+- **Deduplication Store**: All received webhook events are recorded atomically in the `processed_webhook_events` table before execution. Duplicate events return an immediate HTTP `200 OK`.
+- **Stripe Idempotency Keys**: Checkout sessions and payment intents utilize deterministic idempotency keys (`idempotency_key = "chk_" + patientID + "_" + serviceID + "_" + timestampMinute`).
+- **Delayed Webhook Recovery & Auto-Refund**: If a patient abandons a stalled booking and re-books elsewhere, and the delayed webhook arrives for an expired slot, the system automatically marks the transaction and triggers `/api/v1/payments/refund` with Stripe to guarantee zero funds are lost.
+
+### 4. Hardened RabbitMQ Consumer & Dead-Letter Queue (DLQ)
+- **Manual Acknowledgments**: Replaced unsafe `autoAck: true` with strict manual acknowledgment (`delivery.Ack(false)`) upon transaction completion.
+- **Dead-Letter Exchange (DLX)**: Malformed or unprocessable messages are rejected with `delivery.Nack(false, false)` and forwarded to `booking_dlx` / `booking_dlq` for inspection without blocking production traffic.
+- **Payload & Status Sanitization**: Every consumed message validates booking status transitions to prevent invalid state corruption.
 
 ---
 
-## Layout
+## Clean Architecture & Package Layout
 
 ```
 backend/
-  cmd/                     entry point, HTTP server, graceful shutdown
-  internal/
-    api/                   handlers, routes, middleware (auth, casbin)
-    domain/                entities and DTOs
-    usecase/               business logic, incl. RabbitMQ producer/consumer
-    infrastructure/        Bun DB client, repositories, Redis, RabbitMQ
-  pkg/                     config, casbin enforcer, validators, responses
-  test/integration/        integration tests
+├── cmd/
+│   ├── gateway-service/     # Pure Go API Gateway & SPA server (:8080)
+│   ├── auth-service/        # Identity & staff management (:9001)
+│   ├── catalog-service/     # Services catalog & pricing (:9002)
+│   ├── booking-service/     # Booking lifecycle & WebSocket queue (:9003)
+│   ├── payment-service/     # Stripe sessions, webhooks & refund (:9004)
+│   ├── medical-service/     # Consultation EMR & prescriptions (:9005)
+│   └── main.go              # Monolithic entry point (legacy/fallback)
+├── internal/
+│   ├── api/                 # HTTP handlers & middleware
+│   ├── domain/              # Entities, aggregates, and DTOs
+│   ├── usecase/             # Business rules & orchestration
+│   └── infrastructure/      # Bun ORM repositories, Redis, RabbitMQ
+└── pkg/
+    ├── distributed_lock/    # Redis SETNX & atomic Lua release
+    ├── idempotency/         # Bun webhook deduplication store
+    ├── casbin/              # RBAC role enforcer
+    └── common/              # Response wrappers, validators & utils
 frontend/
-  src/pages/               per-role dashboards (patient, doctor, nurse, admin)
-  src/hooks/               useWebSocket, useDoctorQueues, useApi
+├── src/
+│   ├── pages/
+│   │   ├── Home/QueueBoardPage.jsx         # Public live waiting room TV board
+│   │   ├── Patient/BookingForm.jsx         # Interactive slot booking & checkout
+│   │   ├── Doctor/DoctorDashboard.jsx      # Doctor workspace & queue
+│   │   ├── Nurse/NurseDashboard.jsx        # Nurse intake workspace
+│   │   └── Admin/AnalyticsDashboard.jsx    # Revenue & workload analytics
+│   └── components/ui/
+│       └── CreateDrugReceiptModal.jsx      # Clinical vitals, diagnosis & Rx print
 ```
-
-Handlers depend on usecases, usecases depend on repository interfaces, and infrastructure supplies the implementations. Domain types import nothing from the outer layers.
 
 ---
 
-## Running it
+## Service Port Matrix
+
+| Service | Port | Primary Responsibilities |
+|---|---|---|
+| **API Gateway** | `8080` | Public ingress, JWT auth, request routing, SPA serving |
+| **Auth Service** | `9001` | Patient/Doctor/Nurse/Admin authentication, profiles |
+| **Catalog Service** | `9002` | Categories, subcategories, clinical services |
+| **Booking Service** | `9003` | Time-slot reservations, queue management, WebSockets |
+| **Payment Service** | `9004` | Stripe Checkout, webhook verification, refunds |
+| **Medical Service** | `9005` | Vitals intake, medical records, digital prescriptions |
+| **PostgreSQL** | `5432` | Relational database (Bun ORM) |
+| **Redis** | `6379` | Distributed locking & queue pub/sub |
+| **RabbitMQ** | `5672` / `15672` | AMQP message broker & Management Dashboard |
+| **Frontend (Dev)** | `3000` | Vite React development server with HMR |
+
+---
+
+## Getting Started
+
+### 1. Run Everything via Docker Compose (Recommended)
+
+To launch the full microservices stack with all dependencies:
 
 ```bash
-docker compose up --build
+# Clone the repository
+git clone https://github.com/kangourouuu/clinic_booking_service.git
+cd clinic_booking_service
+
+# Create local environment config
+cp .env.example .env
+
+# Spin up all microservices and infrastructure
+docker compose -f docker-compose.microservices.yml up --build
 ```
 
-Brings up Postgres, Redis, RabbitMQ, the Go API, and the React frontend. RabbitMQ's management UI is exposed for inspecting the exchange and queue.
-
-Configuration comes from environment variables — see [`ENVIRONMENT_VARIABLES.md`](./ENVIRONMENT_VARIABLES.md). Stripe and Cloudinary need real keys; everything else has local defaults.
+Access the services:
+- **Application Web UI & Gateway**: [http://localhost:8080](http://localhost:8080)
+- **Vite React Dev Server**: [http://localhost:3000](http://localhost:3000)
+- **RabbitMQ Management**: [http://localhost:15672](http://localhost:15672) (guest / guest)
+- **Public Queue Board**: [http://localhost:8080/queue-board](http://localhost:8080/queue-board)
 
 ---
 
-## Tests
+### 2. Local Standalone Development
+
+To run backend services individually without containers:
+
+```bash
+# 1. Install dependencies
+cd backend && go mod download
+
+# 2. Start API Gateway
+go run cmd/gateway-service/main.go
+
+# 3. Start Domain Services in separate terminals
+go run cmd/auth-service/main.go
+go run cmd/catalog-service/main.go
+go run cmd/booking-service/main.go
+go run cmd/payment-service/main.go
+go run cmd/medical-service/main.go
+
+# 4. Start Frontend
+cd ../frontend
+npm install --cache ./node_modules/.cache_npm
+npm run dev
+```
+
+---
+
+## Running Tests
+
+Execute all unit and infrastructure tests:
 
 ```bash
 cd backend
-go test ./...                    # unit tests
-./scripts/migrate_test.sh        # prepare the test database
-go test ./test/integration/...   # integration tests
+go test -v ./internal/... ./pkg/...
 ```
 
-Unit tests cover the patient repository and usecase; the integration suite exercises patient endpoints against a real database.
+Build the production frontend bundle:
+
+```bash
+cd frontend
+npm run build
+```
 
 ---
 
-## Scope
+## License
 
-This is a personal project built to work through an event-driven design end to end, not a production medical system. It has no HIPAA-style compliance work, no audit trail, and no multi-clinic tenancy.
+This project is licensed under the MIT License.
