@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Users, Stethoscope, User, ClipboardList, LayoutDashboard } from 'lucide-react';
+import { Users, Stethoscope, User, ClipboardList, LayoutDashboard, TrendingUp } from 'lucide-react';
 import PatientManagement from './PatientManagement';
 import DoctorManagement from './DoctorManagement';
 import NurseManagement from './NurseManagement';
 import ServiceManagement from './ServiceManagement';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import { cn } from '../../utils/helpers';
 
 const AdminDashboardPage = () => {
-  const [activeTab, setActiveTab] = useState('patients');
+  const [activeTab, setActiveTab] = useState('analytics');
 
   const tabs = [
+    { id: 'analytics', label: 'Thống kê & Doanh thu', icon: TrendingUp, component: <AnalyticsDashboard /> },
     { id: 'patients', label: 'Quản lý Bệnh nhân', icon: Users, component: <PatientManagement /> },
     { id: 'doctors', label: 'Quản lý Bác sĩ', icon: Stethoscope, component: <DoctorManagement /> },
     { id: 'nurses', label: 'Quản lý Y tá', icon: User, component: <NurseManagement /> },

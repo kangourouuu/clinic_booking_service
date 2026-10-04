@@ -24,7 +24,9 @@ type bookingQueueRepository struct {
 }
 
 func NewBookingQueueRepository(db *bun.DB) BookingQueuueRepository {
-	return &bookingQueueRepository{db: db}
+	repo := &bookingQueueRepository{db: db}
+	_ = repo.migrate()
+	return repo
 }
 
 func (r *bookingQueueRepository) Create(ctx context.Context, bq *patient.BookingQueue) error {
@@ -104,25 +106,46 @@ func (r *bookingQueueRepository) DeleteBookingById(ctx context.Context, queueId 
 	return nil
 }
 
-// func (r *bookingQueueRepository) migrate() error {
-// 	ctx := context.Background()
-// 	_, err := r.db.NewCreateTable().
-// 	Model(&patient.DrugReceipt{}).
-// 	IfNotExists().
-// 	Exec(ctx)
-// 	if err != nil {
-// 		logrus.Errorf("Repository layer: %v", err)
-// 		return err
-// 	}
+func (r *bookingQueueRepository) migrate() error {
+	ctx := context.Background()
+	_, err := r.db.NewCreateTable().
+		Model(&patient.BookingQueue{}).
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		logrus.Errorf("Repository layer failed to create booking_queue table: %v", err)
+	}
 
-// 	_, err = r.db.NewCreateTable().
-// 	Model(&patient.BookingQueue{}).
-// 	WithForeignKeys().
-// 	IfNotExists().
-// 	Exec(ctx)
-// 	if err != nil {
-// 		logrus.Errorf("Repository layer: %v", err)
-// 		return err
-// 	}
-// 	return nil
-// }
+	_, err = r.db.NewCreateTable().
+		Model(&patient.DrugReceipt{}).
+		IfNotExists().
+		Exec(ctx)
+	if err != nil {
+		logrus.Errorf("Repository layer failed to create drug_receipt table: %v", err)
+	}
+
+	// Safely add any new columns to existing table
+	migrations := []string{
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS doctor_id UUID;`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS doctor_name VARCHAR(255);`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS time_slot VARCHAR(50);`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS room_number VARCHAR(50);`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS queue_number VARCHAR(50);`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS payment_intent_id VARCHAR(255);`,
+		`ALTER TABLE booking_queue ADD COLUMN IF NOT EXISTS notes TEXT;`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_prevent_duplicate_booking
+		 ON booking_queue (patient_id, service_id, appointment)
+		 WHERE booking_status IN ('waiting for payment', 'pending payment', 'in progress', 'waiting');`,
+		`CREATE UNIQUE INDEX IF NOT EXISTS idx_prevent_duplicate_doctor_slot
+		 ON booking_queue (doctor_id, appointment, time_slot)
+		 WHERE booking_status IN ('waiting for payment', 'pending payment', 'in progress', 'waiting') AND doctor_id IS NOT NULL;`,
+	}
+
+	for _, q := range migrations {
+		if _, err := r.db.ExecContext(ctx, q); err != nil {
+			logrus.Warnf("Migration statement warning: %v", err)
+		}
+	}
+
+	return nil
+}

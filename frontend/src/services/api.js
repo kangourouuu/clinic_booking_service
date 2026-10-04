@@ -33,10 +33,11 @@ export const setAuthToken = (token) => {
 // Request interceptor
 api.interceptors.request.use(
     (config) => {
-        // Ensure cookie is set for requests
-        if (authToken) {
+        const token = authToken || localStorage.getItem('clinic_token')
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
             const expires = new Date(Date.now() + 7 * 864e5).toUTCString()
-            document.cookie = `clinic_token=${authToken}; expires=${expires}; path=/; secure=false; samesite=lax`
+            document.cookie = `clinic_token=${token}; expires=${expires}; path=/; secure=false; samesite=lax`
         }
 
         console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`)

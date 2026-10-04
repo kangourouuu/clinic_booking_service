@@ -34,8 +34,8 @@ const Header = () => {
         if (!isAuthenticated) {
             return [
                 { name: 'Trang chủ', href: '/' },
-                { name: 'Dịch vụ', href: '/services' },
-                { name: 'Về chúng tôi', href: '/about' },
+                { name: 'Bảng gọi số Live', href: '/queue-board' },
+                { name: 'Dịch vụ', href: '/patient/services' },
                 { name: 'Liên hệ', href: '/contact' },
             ]
         }
@@ -44,29 +44,29 @@ const Header = () => {
             case 'patient':
                 return [
                     { name: 'Dashboard', href: '/patient/dashboard' },
-                    
+                    { name: 'Đặt lịch hẹn', href: '/patient/booking/new' },
                     { name: 'Đăng ký dịch vụ', href: '/patient/service-registration' },
-                    
-                    
+                    { name: 'Bảng gọi số Live', href: '/queue-board' },
                 ]
             case 'nurse':
                 return [
                     { name: 'Dashboard', href: '/nurse/dashboard' },
                     { name: 'Quản lý dịch vụ', href: '/nurse/services' },
                     { name: 'Hàng đợi', href: '/nurse/queue' },
+                    { name: 'Bảng gọi số TV', href: '/queue-board' },
                 ]
             case 'doctor':
                 return [
                     { name: 'Dashboard', href: '/doctor/dashboard' },
                     { name: 'Lịch làm việc', href: '/doctor/schedule' },
                     { name: 'Bệnh nhân', href: '/doctor/patients' },
+                    { name: 'Bảng gọi số TV', href: '/queue-board' },
                 ]
             default:
                 return [
                     { name: 'Trang chủ', href: '/' },
-                    { name: 'Dịch vụ', href: '/services' },
-                    { name: 'Về chúng tôi', href: '/about' },
-                    { name: 'Liên hệ', href: '/contact' },
+                    { name: 'Bảng gọi số Live', href: '/queue-board' },
+                    { name: 'Dịch vụ', href: '/patient/services' },
                 ]
         }
     }

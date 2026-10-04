@@ -50,6 +50,8 @@ const NotFound = lazy(() => import('../pages/Error/NotFound'))
 const Unauthorized = lazy(() => import('../pages/Error/Unauthorized'))
 
 // Loading fallback component
+const QueueBoardPage = lazy(() => import('../pages/Home/QueueBoardPage'))
+
 const PageLoader = () => (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-white to-blue-50/30">
         <Loading />
@@ -64,6 +66,7 @@ const AppRoutes = () => {
             <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/queue-board" element={<QueueBoardPage />} />
 
                 {/* Auth Routes - Redirect to dashboard if already logged in */}
                 <Route
@@ -131,6 +134,8 @@ const AppRoutes = () => {
                             <Route path="services/category/:categoryId" element={<ServiceSubcategories />} />
                             <Route path="services/subcategory/:subcategoryId" element={<ServiceList />} />
                             <Route path="service-registration" element={<ServiceRegistration />} />
+                            <Route path="booking" element={<BookingForm />} />
+                            <Route path="booking/new" element={<BookingForm />} />
                             <Route path="booking/:serviceId" element={<BookingForm />} />
                             <Route path="bookings" element={<BookingHistory />} />
                             <Route path="medical-history" element={<MedicalHistory />} />

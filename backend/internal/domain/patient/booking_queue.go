@@ -41,6 +41,14 @@ type BookingQueue struct {
 	AppointmentDate time.Time `json:"appointment" bun:"appointment,default:current_timestamp"`
 	CreatedAt       time.Time `json:"created_at" bun:"created_at,default:current_timestamp"`
 
+	DoctorId        *uuid.UUID `json:"doctor_id,omitempty" bun:"doctor_id,type:uuid"`
+	DoctorName      string     `json:"doctor_name,omitempty" bun:"doctor_name"`
+	TimeSlot        string     `json:"time_slot,omitempty" bun:"time_slot"`
+	RoomNumber      string     `json:"room_number,omitempty" bun:"room_number"`
+	QueueNumber     string     `json:"queue_number,omitempty" bun:"queue_number"`
+	PaymentIntentId string     `json:"payment_intent_id,omitempty" bun:"payment_intent_id"`
+	Notes           string     `json:"notes,omitempty" bun:"notes"`
+
 	Patient     *Patient     `bun:"rel:belongs-to,join:patient_id=patient_id"`
 	DrugReceipt *DrugReceipt `bun:"rel:has-one,join:queue_id=queue_id"`
 }

@@ -1,0 +1,46 @@
+# ==============================================================================
+# Multi-stage Production Dockerfile for Clinic Booking Microservices
+# Usage: docker build --build-arg SERVICE=<service-name> -f Dockerfile.prod -t clinic-<service>:latest .
+# Available services:
+#   - gateway-service
+#   - auth-service
+#   - catalog-service
+#   - booking-service
+#   - payment-service
+#   - medical-service
+# ==============================================================================
+
+# Stage 1: Build the Go binary
+FROM golang:1.24-alpine AS builder
+
+ARG SERVICE=gateway-service
+
+WORKDIR /app
+RUN apk add --no-cache git ca-certificates tzdata
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build statically linked binary without debug symbols
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /app/service ./cmd/${SERVICE}/main.go
+
+# Stage 2: Minimal hardened production runner
+FROM alpine:3.19
+
+RUN apk --no-cache add ca-certificates tzdata && \
+    addgroup -S appgroup && adduser -S appuser -G appgroup
+
+WORKDIR /app
+
+COPY --from=builder /app/service /app/service
+COPY --from=builder /app/pkg/casbin /app/pkg/casbin
+COPY --from=builder /app/config /app/config
+
+# Non-root user execution
+USER appuser
+
+EXPOSE 8080 9001 9002 9003 9004 9005
+
+ENTRYPOINT ["/app/service"]

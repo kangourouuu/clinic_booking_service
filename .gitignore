@@ -8,3 +8,8 @@ pgdata
 backend/main
 backend/tmp
 frontend/dist
+
+# Tool directories
+.agents
+.claude
+.codegraph

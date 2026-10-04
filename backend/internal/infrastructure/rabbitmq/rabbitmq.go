@@ -14,9 +14,13 @@ const (
 	ServiceRegisterEvent = "service.register"
 	QueueName            = "booking_queue"
 	ExchangeName         = "booking_exchange"
+	DLXExchangeName      = "booking_dlx"
+	DLQQueueName         = "booking_dlq"
+	DLQRoutingKey        = "booking.dlq"
 )
 
 type MessageHandler func([]byte) error
+type ManualAckHandler func(amqp.Delivery) error
 
 type RabbitMQConnection interface {
 	Connect() (*amqp.Connection, error)
@@ -26,12 +30,15 @@ type RabbitMQConnection interface {
 	CloseChannel(ch *amqp.Channel) error
 
 	QueueDeclare(ch *amqp.Channel, queueName string) (amqp.Queue, error)
+	QueueDeclareWithArgs(ch *amqp.Channel, queueName string, args amqp.Table) (amqp.Queue, error)
 	QueueBind(ch *amqp.Channel, queueName, exchangeName, routingKey string) error
 
 	ExchangeDeclare(ch *amqp.Channel, exchangeName, exchangeType string, durable bool) error
 
 	PublishWithContext(ctx context.Context, ch *amqp.Channel, data *dtoqueue.BookingQueuePublish, queueName string) error
+	PublishToExchange(ctx context.Context, ch *amqp.Channel, exchangeName, routingKey string, data interface{}) error
 	Consume(ctx context.Context, ch *amqp.Channel, queueName string, msgHandler MessageHandler) error
+	ConsumeManualAck(ctx context.Context, ch *amqp.Channel, queueName string, msgHandler ManualAckHandler) error
 }
 
 type RabbitConfig struct {
@@ -53,7 +60,7 @@ func NewRabbitMQ(rbcfg RabbitConfig) *RabbitMQClient {
 
 func (rbmq *RabbitMQClient) Connect() (*amqp.Connection, error) {
 	var address string
-	
+
 	// If URL is provided, use it directly; otherwise build from components
 	if rbmq.URL != "" {
 		address = rbmq.URL
@@ -100,13 +107,17 @@ func (rbmq *RabbitMQClient) CloseChannel(ch *amqp.Channel) error {
 }
 
 func (rbmq *RabbitMQClient) QueueDeclare(ch *amqp.Channel, queueName string) (amqp.Queue, error) {
+	return rbmq.QueueDeclareWithArgs(ch, queueName, nil)
+}
+
+func (rbmq *RabbitMQClient) QueueDeclareWithArgs(ch *amqp.Channel, queueName string, args amqp.Table) (amqp.Queue, error) {
 	q, err := ch.QueueDeclare(
 		queueName, // name
 		true,      // durable
 		false,     // delete when unused
 		false,     // exclusive
 		false,     // no-wait
-		nil,       // arguments
+		args,      // arguments
 	)
 	if err != nil {
 		logrus.Errorf("Failed to declare queue %s: %v", queueName, err)
@@ -151,23 +162,22 @@ func (rbmq *RabbitMQClient) ExchangeDeclare(ch *amqp.Channel, exchangeName, exch
 }
 
 func (rbmq *RabbitMQClient) PublishWithContext(ctx context.Context, ch *amqp.Channel, data *dtoqueue.BookingQueuePublish, queueName string) error {
-	// Marshal data to JSON
 	body, err := json.Marshal(data)
 	if err != nil {
 		logrus.Errorf("Failed to marshal booking data: %v", err)
 		return fmt.Errorf("failed to marshal data: %w", err)
 	}
 
-	// Publish message
 	err = ch.PublishWithContext(
 		ctx,
-		"",        // exchange (empty for default)
+		"",        // exchange (default)
 		queueName, // routing key
 		false,     // mandatory
 		false,     // immediate
 		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        body,
+			ContentType:  "application/json",
+			DeliveryMode: amqp.Persistent,
+			Body:         body,
 		},
 	)
 	if err != nil {
@@ -176,6 +186,34 @@ func (rbmq *RabbitMQClient) PublishWithContext(ctx context.Context, ch *amqp.Cha
 	}
 
 	logrus.Infof("Successfully published message to queue %s", queueName)
+	return nil
+}
+
+func (rbmq *RabbitMQClient) PublishToExchange(ctx context.Context, ch *amqp.Channel, exchangeName, routingKey string, data interface{}) error {
+	body, err := json.Marshal(data)
+	if err != nil {
+		logrus.Errorf("Failed to marshal data for exchange %s: %v", exchangeName, err)
+		return fmt.Errorf("failed to marshal data: %w", err)
+	}
+
+	err = ch.PublishWithContext(
+		ctx,
+		exchangeName,
+		routingKey,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType:  "application/json",
+			DeliveryMode: amqp.Persistent,
+			Body:         body,
+		},
+	)
+	if err != nil {
+		logrus.Errorf("Failed to publish message to exchange %s: %v", exchangeName, err)
+		return fmt.Errorf("failed to publish message to exchange %s: %w", exchangeName, err)
+	}
+
+	logrus.Infof("Successfully published message to exchange %s (%s)", exchangeName, routingKey)
 	return nil
 }
 
@@ -196,7 +234,6 @@ func (rbmq *RabbitMQClient) Consume(ctx context.Context, ch *amqp.Channel, queue
 
 	logrus.Infof("Started consuming messages from queue %s", queueName)
 
-	// Start consuming messages in a goroutine
 	go func() {
 		for {
 			select {
@@ -210,11 +247,65 @@ func (rbmq *RabbitMQClient) Consume(ctx context.Context, ch *amqp.Channel, queue
 				}
 
 				logrus.Infof("Received message from queue %s", queueName)
-
 				if err := msgHandler(msg.Body); err != nil {
 					logrus.Errorf("Failed to process message from queue %s: %v", queueName, err)
 				} else {
 					logrus.Infof("Successfully processed message from queue %s", queueName)
+				}
+			}
+		}
+	}()
+
+	return nil
+}
+
+// ConsumeManualAck provides reliable consuming with auto-ack: false, manual Ack on success, and Nack (DLQ) on error
+func (rbmq *RabbitMQClient) ConsumeManualAck(ctx context.Context, ch *amqp.Channel, queueName string, msgHandler ManualAckHandler) error {
+	// Set prefetch QoS to avoid overwhelming the consumer
+	if err := ch.Qos(10, 0, false); err != nil {
+		logrus.Warnf("Failed to set QoS prefetch: %v", err)
+	}
+
+	msgs, err := ch.Consume(
+		queueName,
+		"",
+		false, // auto-ack: FALSE for reliability!
+		false,
+		false,
+		false,
+		nil,
+	)
+	if err != nil {
+		logrus.Errorf("Failed to register manual-ack consumer for queue %s: %v", queueName, err)
+		return fmt.Errorf("failed to register consumer for queue %s: %w", queueName, err)
+	}
+
+	logrus.Infof("Started manual-ack consumer for queue %s", queueName)
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				logrus.Infof("Context cancelled, stopping manual-ack consumer for queue %s", queueName)
+				return
+			case msg, ok := <-msgs:
+				if !ok {
+					logrus.Warnf("Message channel closed for queue %s", queueName)
+					return
+				}
+
+				if err := msgHandler(msg); err != nil {
+					logrus.Errorf("Error processing message from %s: %v. Rejecting to DLQ", queueName, err)
+					// Nack with requeue=false moves the message to Dead Letter Queue (DLQ) via DLX
+					if nackErr := msg.Nack(false, false); nackErr != nil {
+						logrus.Errorf("Failed to Nack message: %v", nackErr)
+					}
+				} else {
+					if ackErr := msg.Ack(false); ackErr != nil {
+						logrus.Errorf("Failed to Ack message: %v", ackErr)
+					} else {
+						logrus.Infof("Message acknowledged successfully from queue %s", queueName)
+					}
 				}
 			}
 		}
