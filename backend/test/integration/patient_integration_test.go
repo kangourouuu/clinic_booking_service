@@ -1,7 +1,7 @@
 package patientrepository
 
 import (
-	patienthandler "backend/internal/api/patient-handler"
+	patienthandler "backend/internal/api/patient_handler"
 	"backend/internal/domain/dto"
 	dtopatient "backend/internal/domain/dto/dto_patient"
 	"backend/internal/domain/patient"
@@ -9,7 +9,7 @@ import (
 	patientrepository "backend/internal/infrastructure/persistence/patient_repository"
 	persistence "backend/internal/infrastructure/persistence/service_repository"
 	"backend/internal/infrastructure/redis"
-	patientusecase "backend/internal/usecase/patient-usecase"
+	patientusecase "backend/internal/usecase/patient_usecase"
 	paymentusecase "backend/internal/usecase/payment_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 	errorsresponse "backend/pkg/app_response/errors_response"

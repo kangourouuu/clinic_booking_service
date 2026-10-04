@@ -7,7 +7,7 @@ import (
 	"backend/internal/infrastructure/db"
 	persistence "backend/internal/infrastructure/persistence/service_repository"
 	doctorrepository "backend/internal/infrastructure/persistence/staff_repository/doctor_repository"
-	doctorusecase "backend/internal/usecase/doctor-usecase"
+	doctorusecase "backend/internal/usecase/doctor_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 	"backend/pkg/app_response/response"
 	"backend/pkg/config"

@@ -5,7 +5,7 @@ import (
 	dtonurse "backend/internal/domain/dto/dto_nurse"
 	dtoqueue "backend/internal/domain/dto/queue"
 	"backend/internal/infrastructure/redis"
-	nurseusecase "backend/internal/usecase/nurse-usecase"
+	nurseusecase "backend/internal/usecase/nurse_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 	errorsresponse "backend/pkg/app_response/errors_response"
 	"backend/pkg/app_response/response"

@@ -3,7 +3,7 @@ package doctorhandler
 import (
 	"backend/internal/domain/dto"
 	"backend/internal/domain/dto/dtodoctor"
-	doctorusecase "backend/internal/usecase/doctor-usecase"
+	doctorusecase "backend/internal/usecase/doctor_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 	errorsresponse "backend/pkg/app_response/errors_response"
 	"backend/pkg/app_response/response"

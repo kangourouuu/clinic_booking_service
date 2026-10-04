@@ -1,10 +1,10 @@
 package api
 
 import (
-	doctorhandler "backend/internal/api/doctor-handler"
+	doctorhandler "backend/internal/api/doctor_handler"
 	"backend/internal/api/middleware"
-	nurseHandler "backend/internal/api/nurse-handler"
-	patientHandler "backend/internal/api/patient-handler"
+	nurseHandler "backend/internal/api/nurse_handler"
+	patientHandler "backend/internal/api/patient_handler"
 	paymenthandler "backend/internal/api/payment_handler"
 	servicehandler "backend/internal/api/service_handler"
 	"backend/internal/infrastructure/db"
@@ -18,10 +18,10 @@ import (
 	nurserepository "backend/internal/infrastructure/persistence/staff_repository/nurse_repository"
 	"backend/internal/infrastructure/rabbitmq"
 	"backend/internal/infrastructure/redis"
-	doctorusecase "backend/internal/usecase/doctor-usecase"
+	doctorusecase "backend/internal/usecase/doctor_usecase"
 	messagequeue "backend/internal/usecase/message_queue"
-	nurseUsecase "backend/internal/usecase/nurse-usecase"
-	patientUsecase "backend/internal/usecase/patient-usecase"
+	nurseUsecase "backend/internal/usecase/nurse_usecase"
+	patientUsecase "backend/internal/usecase/patient_usecase"
 	paymentusecase "backend/internal/usecase/payment_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 

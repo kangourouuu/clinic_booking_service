@@ -6,7 +6,7 @@ import (
 	dtopatient "backend/internal/domain/dto/dto_patient"
 	"backend/internal/domain/dto/dtoservice"
 	dtoqueue "backend/internal/domain/dto/queue"
-	patientusecase "backend/internal/usecase/patient-usecase"
+	patientusecase "backend/internal/usecase/patient_usecase"
 	paymentusecase "backend/internal/usecase/payment_usecase"
 	serviceusecase "backend/internal/usecase/service_usecase"
 	"strconv"
