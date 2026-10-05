@@ -1,0 +1,20 @@
+{{- if .Values.openshift.route.enabled -}}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ .Values.openshift.route.name }}
+  labels:
+    {{- include "clinic.labels" . | nindent 4 }}
+spec:
+  to:
+    kind: Service
+    name: {{ .Values.openshift.route.targetService }}
+    weight: 100
+  port:
+    targetPort: {{ .Values.openshift.route.targetPort }}
+  {{- if .Values.openshift.route.tls }}
+  tls:
+    termination: {{ .Values.openshift.route.tls.termination }}
+    insecureEdgeTerminationPolicy: {{ .Values.openshift.route.tls.insecureEdgeTerminationPolicy }}
+  {{- end }}
+{{- end }}

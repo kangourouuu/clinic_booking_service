@@ -1,0 +1,244 @@
+# Default values for clinic-booking Helm chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  appName: clinic-booking
+  environment: production
+
+# Security context configuration (OpenShift and Kubernetes compliant)
+security:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# Sensitive credentials stored in Kubernetes/OpenShift Secret
+secrets:
+  secretKey: "clinic-super-secret-key-change-in-production-2026"
+  postgresPassword: "Quockhanh208@"
+  stripeSecretKey: ""
+  stripeWebhookSecret: ""
+  cloudinaryUrl: ""
+
+# Non-sensitive configuration stored in ConfigMap
+config:
+  postgresHost: "clinic-postgres"
+  postgresPort: 5432
+  postgresUser: "postgres"
+  postgresDatabase: "clinic"
+  postgresSslMode: "disable"
+  redisHost: "clinic-redis"
+  redisPort: 6379
+  rabbitmqHost: "clinic-rabbitmq"
+  rabbitmqPort: 5672
+
+# API Gateway (Go Reverse Proxy + Ingress aggregator on :8080)
+gateway:
+  enabled: true
+  name: gateway-service
+  replicaCount: 2
+  image:
+    repository: clinic/gateway-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Domain Microservices
+services:
+  auth:
+    enabled: true
+    name: auth-service
+    port: 9001
+    replicaCount: 2
+    image:
+      repository: clinic/auth-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  catalog:
+    enabled: true
+    name: catalog-service
+    port: 9002
+    replicaCount: 2
+    image:
+      repository: clinic/catalog-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  booking:
+    enabled: true
+    name: booking-service
+    port: 9003
+    replicaCount: 2
+    image:
+      repository: clinic/booking-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 300m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    autoscaling:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 8
+      targetCPUUtilizationPercentage: 75
+
+  payment:
+    enabled: true
+    name: payment-service
+    port: 9004
+    replicaCount: 2
+    image:
+      repository: clinic/payment-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+  medical:
+    enabled: true
+    name: medical-service
+    port: 9005
+    replicaCount: 2
+    image:
+      repository: clinic/medical-service
+      tag: latest
+      pullPolicy: IfNotPresent
+    resources:
+      limits:
+        cpu: 200m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+# Frontend UI (React Vite application)
+frontend:
+  enabled: true
+  name: frontend
+  replicaCount: 2
+  image:
+    repository: clinic/frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3000
+  resources:
+    limits:
+      cpu: 150m
+      memory: 128Mi
+    requests:
+      cpu: 30m
+      memory: 32Mi
+
+# PostgreSQL Backing Database
+postgres:
+  enabled: true
+  name: clinic-postgres
+  image: postgres:16-alpine
+  port: 5432
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 2Gi
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Redis Backing Cache & Distributed Lock
+redis:
+  enabled: true
+  name: clinic-redis
+  image: redis:7-alpine
+  port: 6379
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# RabbitMQ Backing Message Broker
+rabbitmq:
+  enabled: true
+  name: clinic-rabbitmq
+  image: rabbitmq:3-management-alpine
+  amqpPort: 5672
+  mgmtPort: 15672
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+
+# Standard Kubernetes Ingress (for Minikube, EKS, GKE, KinD)
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: clinic.local
+      paths:
+        - path: /
+          pathType: Prefix
+          targetService: gateway-service
+          targetPort: 8080
+  tls: []
+
+# OpenShift Native Route (for Red Hat OpenShift & Developer Sandbox)
+openshift:
+  route:
+    enabled: false # Set to true when deploying on OpenShift
+    name: clinic-route
+    targetService: gateway-service
+    targetPort: 8080
+    tls:
+      termination: edge
+      insecureEdgeTerminationPolicy: Redirect

@@ -1,0 +1,16 @@
+apiVersion: v2
+name: clinic-booking
+description: Production-grade Helm chart for Clinic Booking microservices platform (Kubernetes & OpenShift)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - clinic
+  - microservices
+  - golang
+  - kubernetes
+  - openshift
+  - react
+maintainers:
+  - name: Clinic Engineering
+    email: dev@clinic.local

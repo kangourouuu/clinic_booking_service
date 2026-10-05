@@ -1,0 +1,146 @@
+{{- range $key, $service := .Values.services }}
+{{- if $service.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $service.name }}
+  labels:
+    {{- include "clinic.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $key }}
+spec:
+  replicas: {{ $service.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "clinic.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $key }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "clinic.name" $ }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        app.kubernetes.io/component: {{ $key }}
+    spec:
+      securityContext:
+        runAsNonRoot: {{ $.Values.security.runAsNonRoot }}
+        seccompProfile:
+          type: {{ $.Values.security.seccompProfile.type }}
+      containers:
+        - name: {{ $service.name }}
+          image: "{{ $service.image.repository }}:{{ $service.image.tag }}"
+          imagePullPolicy: {{ $service.image.pullPolicy | default "IfNotPresent" }}
+          securityContext:
+            allowPrivilegeEscalation: {{ $.Values.security.allowPrivilegeEscalation }}
+            capabilities:
+              drop:
+                {{- toYaml $.Values.security.capabilities.drop | nindent 16 }}
+          ports:
+            - name: http
+              containerPort: {{ $service.port }}
+              protocol: TCP
+          env:
+            - name: PORT
+              value: {{ $service.port | quote }}
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-secrets
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: POSTGRES_DB
+            - name: POSTGRES_SSLMODE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: POSTGRES_SSLMODE
+            - name: DATABASE_URL
+              value: "postgres://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)?sslmode=$(POSTGRES_SSLMODE)"
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-secrets
+                  key: SECRET_KEY
+            {{- if or (eq $key "auth") (eq $key "booking") }}
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: REDIS_PORT
+            - name: REDIS_URL
+              value: "redis://$(REDIS_HOST):$(REDIS_PORT)/0"
+            {{- end }}
+            {{- if or (eq $key "booking") (eq $key "payment") }}
+            - name: RABBITMQ_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: RABBITMQ_HOST
+            - name: RABBITMQ_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-config
+                  key: RABBITMQ_PORT
+            - name: RABBITMQ_URL
+              value: "amqp://guest:guest@$(RABBITMQ_HOST):$(RABBITMQ_PORT)/"
+            {{- end }}
+            {{- if eq $key "payment" }}
+            - name: STRIPE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-secrets
+                  key: STRIPE_SECRET_KEY
+            - name: STRIPE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-secrets
+                  key: STRIPE_WEBHOOK_SECRET
+            - name: FRONTEND_URL
+              value: "http://gateway-service:8080"
+            {{- end }}
+            {{- if eq $key "auth" }}
+            - name: CLOUDINARY_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "clinic.fullname" $ }}-secrets
+                  key: CLOUDINARY_URL
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            {{- toYaml $service.resources | nindent 12 }}
+{{- end }}
+{{- end }}

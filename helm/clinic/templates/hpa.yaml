@@ -1,0 +1,23 @@
+{{- if and .Values.services.booking.enabled .Values.services.booking.autoscaling.enabled -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.services.booking.name }}-hpa
+  labels:
+    {{- include "clinic.labels" . | nindent 4 }}
+    app.kubernetes.io/component: booking
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.services.booking.name }}
+  minReplicas: {{ .Values.services.booking.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.services.booking.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.services.booking.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
